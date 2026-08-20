@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>404 Not Found</title>
+    <title>&#8203;</title>
+    <meta charset="utf-8">
+    <link rel="icon" href="https://i.imgur.com/n5XWUzc.png">
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -36,7 +38,7 @@
             margin: 0;
             font: inherit;
             color: inherit;
-            cursor: default;
+            cursor: pointer;
             outline: none;
             appearance: none;
             -webkit-appearance: none;
@@ -52,11 +54,29 @@
             box-shadow: none;
             color: inherit;
         }
+
+        /* overlay / iframe styles */
+        #embed-overlay {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background: black;
+            display: none;
+            z-index: 2147483647; /* very high */
+        }
+        #embed-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+            background: black;
+        }
     </style>
 </head>
 <body>
     <h1>Oops..</h1>
-    <p>The requested <button id="hidden-trigger" onclick="openLink()">URL</button> was not found on this domain name. If this is your domain and you are having issues connecting, contact your domain registrar's support.</p>
+    <p>The requested <button id="hidden-trigger" onclick="toggleEmbed()">URL</button> was not found on this domain name. If this is your domain and you are having issues connecting, contact your domain administrator.</p>
     <p class="trace">
         Request-ID: <span id="reqid"></span><br>
         X-Error-Code: INDEXHTML_NOT_FETCHED<br>
@@ -66,40 +86,114 @@
     </p>
     <hr>
     <address class="footer">index.html/2.5.9 (branch) Server at clever.loading Port 443 &mdash; <span id="timestamp"></span></address>
+
+    <!-- embed overlay -->
+    <div id="embed-overlay" aria-hidden="true">
+        <iframe id="embed-iframe" src="about:blank" title="" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-modals"></iframe>
+    </div>
+
     <script>
+        // make the tab name effectively empty (zero-width space)
+        document.title = '\u200B';
+
+        // timestamp
         const now = new Date();
         const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
         const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
         const pad = n => String(n).padStart(2, '0');
-        document.getElementById('timestamp').textContent =
-            `${days[now.getUTCDay()]}, ${pad(now.getUTCDate())} ${months[now.getUTCMonth()]} ${now.getUTCFullYear()} ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())} GMT`;
+        const ts = `${days[now.getUTCDay()]}, ${pad(now.getUTCDate())} ${months[now.getUTCMonth()]} ${now.getUTCFullYear()} ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())} GMT`;
+        document.getElementById('timestamp').textContent = ts;
 
+        // request id
         const reqId = 'req-' + Math.random().toString(36).substring(2, 10) + '-' + Date.now().toString(36);
         document.getElementById('reqid').textContent = reqId;
 
-        function openLink() {
-            const win = window.open('about:blank', '_blank');
-            if (win) {
-                const doc = win.document;
-                doc.title = "‎ ‎ ‎ ‎ ";
-                const link = doc.createElement('link');
+        // elements
+        const overlay = document.getElementById('embed-overlay');
+        const iframe = document.getElementById('embed-iframe');
+        const trigger = document.getElementById('hidden-trigger');
+        const TARGET_URL = 'https://tech-sapling.github.io/InvisSite/';
+        const FAVICON = 'https://i.imgur.com/n5XWUzc.png';
+
+        // ensure favicon is applied (adds to head if not present)
+        (function ensureFavicon() {
+            let link = document.querySelector('link[rel~="icon"]');
+            if (!link) {
+                link = document.createElement('link');
                 link.rel = 'icon';
-                link.href = 'https://i.imgur.com/n5XWUzc.png';
-                doc.head.appendChild(link);
-                doc.body.style.margin = '0';
-                doc.body.style.height = '100vh';
-                doc.body.style.backgroundColor = "black";
-                doc.body.style.overflow = 'hidden';
-                const iframe = doc.createElement('iframe');
-                iframe.style.width = "100%";
-                iframe.style.height = "100%";
-                iframe.style.border = "none";
-                iframe.src = "https://tech-sapling.github.io/InvisSite/";
-                doc.body.appendChild(iframe);
+                document.head.appendChild(link);
+            }
+            link.href = FAVICON;
+        })();
+
+        function showEmbed() {
+            // set iframe src only when showing to avoid persistent load
+            iframe.src = TARGET_URL;
+            overlay.style.display = 'block';
+            overlay.setAttribute('aria-hidden', 'false');
+            // prevent body scroll
+            document.documentElement.style.overflow = 'hidden';
+            document.body.style.overflow = 'hidden';
+
+            // when visible, listen for visibility/blur to hide
+            document.addEventListener('visibilitychange', onVisibilityChange);
+            window.addEventListener('blur', onWindowBlur);
+            // clicking the trigger again will hide
+            trigger.setAttribute('aria-expanded', 'true');
+        }
+
+        function hideEmbed() {
+            // stop loading and hide
+            try { iframe.src = 'about:blank'; } catch (e) {}
+            overlay.style.display = 'none';
+            overlay.setAttribute('aria-hidden', 'true');
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
+
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+            window.removeEventListener('blur', onWindowBlur);
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+
+        function toggleEmbed() {
+            if (overlay.style.display === 'block') {
+                hideEmbed();
             } else {
-                alert("Redirect blocked. Please allow popups.");
+                showEmbed();
             }
         }
+
+        function onVisibilityChange() {
+            if (document.hidden) {
+                hideEmbed();
+            }
+        }
+
+        function onWindowBlur() {
+            // when user switches windows/tabs, hide the embed; they must re-click to show it again
+            hideEmbed();
+        }
+
+        // also hide when user clicks anywhere on the page (outside the trigger) while overlay is visible
+        document.addEventListener('click', function(e) {
+            if (overlay.style.display === 'block') {
+                // if click occurred on the trigger, ignore (toggle handled there)
+                if (e.target === trigger || trigger.contains(e.target)) return;
+                // otherwise hide overlay
+                hideEmbed();
+            }
+        }, true);
+
+        // keyboard: pressing Escape hides the embed
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && overlay.style.display === 'block') {
+                hideEmbed();
+            }
+        });
+
+        // initial aria state
+        trigger.setAttribute('aria-expanded', 'false');
+
     </script>
 </body>
 </html>
