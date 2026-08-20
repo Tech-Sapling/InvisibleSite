@@ -136,9 +136,8 @@
             document.documentElement.style.overflow = 'hidden';
             document.body.style.overflow = 'hidden';
 
-            // when visible, listen for visibility/blur to hide
+            // when visible, listen for visibilitychange only (only hide when tab is not visible)
             document.addEventListener('visibilitychange', onVisibilityChange);
-            window.addEventListener('blur', onWindowBlur);
             // clicking the trigger again will hide
             trigger.setAttribute('aria-expanded', 'true');
         }
@@ -152,7 +151,6 @@
             document.body.style.overflow = '';
 
             document.removeEventListener('visibilitychange', onVisibilityChange);
-            window.removeEventListener('blur', onWindowBlur);
             trigger.setAttribute('aria-expanded', 'false');
         }
 
@@ -165,18 +163,16 @@
         }
 
         function onVisibilityChange() {
-            if (document.hidden) {
+            // only hide when the page is truly not visible (user switched tabs/windows)
+            if (document.visibilityState === 'hidden' || document.hidden) {
                 hideEmbed();
             }
         }
 
-        function onWindowBlur() {
-            // when user switches windows/tabs, hide the embed; they must re-click to show it again
-            hideEmbed();
-        }
-
-        // NOTE: removed the global document click handler that hid the overlay when clicking anywhere on the page.
-        // The overlay will now be hidden only by visibilitychange, window blur, Escape key, or toggling the trigger.
+        // NOTE: removed blur-based hiding and any global click handlers. The overlay will now be hidden only by
+        // - page visibilitychange (user switches tabs/windows),
+        // - pressing Escape,
+        // - or toggling the trigger button.
 
         // keyboard: pressing Escape hides the embed
         document.addEventListener('keydown', function(e) {
