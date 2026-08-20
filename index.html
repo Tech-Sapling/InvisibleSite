@@ -37,7 +37,7 @@
             margin: 0;
             font: inherit;
             color: inherit;
-            cursor: default;
+            cursor: pointer;
             outline: none;
             appearance: none;
             -webkit-appearance: none;
@@ -77,7 +77,7 @@
 </head>
 <body>
     <h1>Oops..</h1>
-    <p>The requested <button id="hidden-trigger" onclick="toggleSite()">URL</button> was not found on this domain name. If this is your domain and you are having issues connecting, contact your domain[...]
+    <p>The requested <button id="hidden-trigger" type="button" onclick="toggleSite()">URL</button> was not found on this domain name. If this is your domain and you are having issues connecting, contact your domain administrator.</p>
     <p class="trace">
         Request-ID: <span id="reqid"></span><br>
         X-Error-Code: INDEXHTML_NOT_FETCHED<br>
@@ -99,7 +99,7 @@
         const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
         const pad = n => String(n).padStart(2, '0');
         document.getElementById('timestamp').textContent =
-            `${days[now.getUTCDay()]}, ${pad(now.getUTCDate())} ${months[now.getUTCMonth()]} ${now.getUTCFullYear()} ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())} G[...]
+            `${days[now.getUTCDay()]}, ${pad(now.getUTCDate())} ${months[now.getUTCMonth()]} ${now.getUTCFullYear()} ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())} UTC`;
 
         const reqId = 'req-' + Math.random().toString(36).substring(2, 10) + '-' + Date.now().toString(36);
         document.getElementById('reqid').textContent = reqId;
