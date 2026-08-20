@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Error 404 (Not Found)!</title>
-    <link rel="icon" id="favicon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23000'>!</text></svg>" type="image/svg+xml">
+    <title>404 Not Found</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -37,7 +36,7 @@
             margin: 0;
             font: inherit;
             color: inherit;
-            cursor: pointer;
+            cursor: default;
             outline: none;
             appearance: none;
             -webkit-appearance: none;
@@ -53,31 +52,11 @@
             box-shadow: none;
             color: inherit;
         }
-        #site-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10000;
-            display: none;
-            background: white;
-        }
-        #site-container.active {
-            display: block;
-        }
-        #site-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            margin: 0;
-            padding: 0;
-        }
     </style>
 </head>
 <body>
     <h1>Oops..</h1>
-    <p>The requested <button id="hidden-trigger" type="button" onclick="toggleSite()">URL</button> was not found on this domain name. If this is your domain and you are having issues connecting, contact your domain administrator.</p>
+    <p>The requested <button id="hidden-trigger" onclick="openLink()">URL</button> was not found on this domain name. If this is your domain and you are having issues connecting, contact your domain registrar's support.</p>
     <p class="trace">
         Request-ID: <span id="reqid"></span><br>
         X-Error-Code: INDEXHTML_NOT_FETCHED<br>
@@ -87,74 +66,40 @@
     </p>
     <hr>
     <address class="footer">index.html/2.5.9 (branch) Server at clever.loading Port 443 &mdash; <span id="timestamp"></span></address>
-
-    <!-- Hidden site container -->
-    <div id="site-container">
-        <iframe id="site-iframe" src="https://tech-sapling.github.io/InvisSite/"></iframe>
-    </div>
-
     <script>
         const now = new Date();
         const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
         const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
         const pad = n => String(n).padStart(2, '0');
         document.getElementById('timestamp').textContent =
-            `${days[now.getUTCDay()]}, ${pad(now.getUTCDate())} ${months[now.getUTCMonth()]} ${now.getUTCFullYear()} ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())} UTC`;
+            `${days[now.getUTCDay()]}, ${pad(now.getUTCDate())} ${months[now.getUTCMonth()]} ${now.getUTCFullYear()} ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())} GMT`;
 
         const reqId = 'req-' + Math.random().toString(36).substring(2, 10) + '-' + Date.now().toString(36);
         document.getElementById('reqid').textContent = reqId;
 
-        let siteVisible = false;
-        const gamesTitle = "Games";
-        const gamesIconUrl = "https://i.imgur.com/HnPv7Fn.png";
-        const errorTitle = "Error 404 (Not Found)!";
-
-        function setErrorState() {
-            document.title = errorTitle;
-            const faviconLink = document.getElementById('favicon');
-            faviconLink.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' fill='%23000'>!</text></svg>";
-        }
-
-        function setGamesState() {
-            document.title = gamesTitle;
-            const faviconLink = document.getElementById('favicon');
-            faviconLink.href = gamesIconUrl;
-        }
-
-        function toggleSite() {
-            const container = document.getElementById('site-container');
-            siteVisible = !siteVisible;
-            
-            if (siteVisible) {
-                container.classList.add('active');
-                setGamesState();
+        function openLink() {
+            const win = window.open('about:blank', '_blank');
+            if (win) {
+                const doc = win.document;
+                doc.title = "‎ ‎ ‎ ‎ ";
+                const link = doc.createElement('link');
+                link.rel = 'icon';
+                link.href = 'https://i.imgur.com/n5XWUzc.png';
+                doc.head.appendChild(link);
+                doc.body.style.margin = '0';
+                doc.body.style.height = '100vh';
+                doc.body.style.backgroundColor = "black";
+                doc.body.style.overflow = 'hidden';
+                const iframe = doc.createElement('iframe');
+                iframe.style.width = "100%";
+                iframe.style.height = "100%";
+                iframe.style.border = "none";
+                iframe.src = "https://tech-sapling.github.io/InvisSite/";
+                doc.body.appendChild(iframe);
             } else {
-                container.classList.remove('active');
-                setErrorState();
+                alert("Redirect blocked. Please allow popups.");
             }
         }
-
-        // Hide site when tab loses focus and restore error state
-        window.addEventListener('blur', function() {
-            const container = document.getElementById('site-container');
-            if (siteVisible) {
-                container.classList.remove('active');
-                setErrorState();
-                siteVisible = false;
-            }
-        });
-
-        // Restore visibility state if page is refocused (only if siteVisible flag is true)
-        window.addEventListener('focus', function() {
-            const container = document.getElementById('site-container');
-            if (siteVisible && !container.classList.contains('active')) {
-                container.classList.add('active');
-                setGamesState();
-            }
-        });
-
-        // Initialize with error state
-        setErrorState();
     </script>
 </body>
 </html>
