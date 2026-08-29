@@ -7,170 +7,124 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/interactjs/1.10.17/interact.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
-    --ink:#12203B;
-    --ink-2:#1B2C4F;
-    --blueprint:#2E6CD1;
-    --blueprint-dim:#4C7CC8;
-    --paper:#FAFAF7;
-    --grid-line:rgba(46,108,209,0.16);
-    --amber:#F2A93B;
-    --amber-dim:#D6922A;
-    --slate:#8492AC;
-    --slate-dark:#5B6478;
-    --ok:#3FA796;
-    --danger:#E0574C;
-    --mono: 'IBM Plex Mono', monospace;
-    --sans: 'Inter', sans-serif;
+    --ink:#12203B; --ink-2:#1B2C4F; --ink-3:#233B69;
+    --blueprint:#2E6CD1; --blueprint-dim:#4C7CC8;
+    --paper:#FAFAF7; --grid-line:rgba(46,108,209,0.16);
+    --amber:#F2A93B; --amber-dim:#D6922A;
+    --slate:#8492AC; --slate-dark:#5B6478;
+    --ok:#3FA796; --danger:#E0574C;
+    --mono:'IBM Plex Mono',monospace; --sans:'Inter',sans-serif;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;height:100%;background:var(--ink);font-family:var(--sans);color:#e8ecf5;}
-
-  /* ===== APP SHELL ===== */
   #app{display:flex;flex-direction:column;height:100vh;}
 
-  header#topbar{
-    display:flex;align-items:center;gap:18px;
-    background:var(--ink-2);border-bottom:1px solid rgba(255,255,255,0.06);
-    padding:10px 18px;flex-shrink:0;z-index:50;
-  }
+  /* ===== TOP BAR ===== */
+  header#topbar{display:flex;align-items:center;gap:14px;background:var(--ink-2);border-bottom:1px solid rgba(255,255,255,0.06);padding:10px 18px;flex-shrink:0;z-index:60;flex-wrap:wrap;}
   .brand{display:flex;align-items:baseline;gap:2px;font-family:var(--mono);font-weight:600;letter-spacing:-0.5px;}
   .brand b{color:#fff;font-size:16px;}
   .brand span{color:var(--blueprint-dim);font-size:16px;}
   .brand small{color:var(--slate);font-family:var(--mono);font-size:10px;margin-left:8px;border:1px solid rgba(255,255,255,0.1);padding:2px 6px;border-radius:20px;text-transform:uppercase;letter-spacing:0.06em;}
 
   .device-switch{display:flex;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:3px;gap:2px;margin-left:auto;}
-  .device-switch button{
-    background:transparent;border:none;color:var(--slate);padding:6px 12px;border-radius:6px;cursor:pointer;
-    font-family:var(--mono);font-size:11px;display:flex;align-items:center;gap:6px;letter-spacing:0.02em;
-  }
+  .device-switch button{background:transparent;border:none;color:var(--slate);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--mono);font-size:11px;display:flex;align-items:center;gap:6px;letter-spacing:0.02em;}
   .device-switch button.active{background:var(--blueprint);color:#fff;}
   .device-switch button:hover:not(.active){color:#fff;}
 
+  .grid-controls{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:5px 8px;}
+  .grid-controls label{font-family:var(--mono);font-size:10px;color:var(--slate);}
+  .grid-controls input[type=number]{width:46px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:5px;color:#fff;font-family:var(--mono);font-size:11px;padding:4px 5px;}
+  .toggle-chip{font-family:var(--mono);font-size:11px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--slate);padding:5px 9px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:5px;}
+  .toggle-chip.active{background:rgba(63,167,150,0.18);border-color:var(--ok);color:#bdf5ea;}
+
   .top-actions{display:flex;gap:8px;}
-  .btn{
-    font-family:var(--mono);font-size:11.5px;letter-spacing:0.02em;border-radius:7px;border:1px solid rgba(255,255,255,0.1);
-    background:rgba(255,255,255,0.03);color:#e8ecf5;padding:8px 13px;cursor:pointer;display:flex;align-items:center;gap:6px;
-    transition:background .15s,border-color .15s;
-  }
+  .btn{font-family:var(--mono);font-size:11.5px;letter-spacing:0.02em;border-radius:7px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:#e8ecf5;padding:8px 13px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s,border-color .15s;}
   .btn:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);}
   .btn.primary{background:var(--amber);color:#1a1200;border-color:var(--amber);font-weight:600;}
   .btn.primary:hover{background:var(--amber-dim);}
   .btn.ghost-danger{color:#f2a49c;}
   .btn.ghost-danger:hover{background:rgba(224,87,76,0.15);border-color:rgba(224,87,76,0.4);}
 
+  /* ===== PAGE BAR ===== */
+  #pagebar{display:flex;align-items:center;gap:10px;background:var(--ink-3);border-bottom:1px solid rgba(255,255,255,0.06);padding:8px 18px;flex-shrink:0;}
+  #pageTabs{display:flex;gap:6px;overflow-x:auto;flex:1;}
+  .page-tab{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--slate);padding:6px 10px;border-radius:7px;font-family:var(--mono);font-size:11.5px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+  .page-tab.active{background:var(--blueprint);border-color:var(--blueprint);color:#fff;}
+  .page-tab .home-ic{font-size:10px;opacity:.8;}
+  .page-tab .pname[contenteditable=true]{outline:none;cursor:text;}
+  .page-tab .del-x{opacity:.5;font-size:12px;padding:0 2px;border-radius:3px;}
+  .page-tab .del-x:hover{opacity:1;color:#ff9d95;}
+  .page-height{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--slate);flex-shrink:0;}
+  .page-height input{width:64px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:5px;color:#fff;font-family:var(--mono);font-size:11px;padding:5px 6px;}
+
   /* ===== BODY LAYOUT ===== */
   #body-row{display:flex;flex:1;min-height:0;}
-
-  aside#palette{
-    width:210px;flex-shrink:0;background:var(--ink-2);border-right:1px solid rgba(255,255,255,0.06);
-    padding:16px 14px;overflow-y:auto;
-  }
+  aside#palette{width:210px;flex-shrink:0;background:var(--ink-2);border-right:1px solid rgba(255,255,255,0.06);padding:16px 14px;overflow-y:auto;}
   .panel-title{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--slate);margin:4px 2px 10px;}
-  .block{
-    display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
-    border-radius:9px;padding:10px 11px;margin-bottom:8px;cursor:grab;font-size:13px;color:#dfe4ee;
-    transition:border-color .15s, background .15s, transform .1s;
-  }
+  .block{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:9px;padding:10px 11px;margin-bottom:8px;cursor:grab;font-size:13px;color:#dfe4ee;transition:border-color .15s,background .15s,transform .1s;}
   .block:hover{border-color:var(--blueprint-dim);background:rgba(46,108,209,0.1);}
   .block:active{cursor:grabbing;transform:scale(0.98);}
-  .block .ic{
-    width:26px;height:26px;border-radius:6px;background:rgba(46,108,209,0.18);color:var(--blueprint-dim);
-    display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;
-  }
+  .block .ic{width:26px;height:26px;border-radius:6px;background:rgba(46,108,209,0.18);color:var(--blueprint-dim);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
   .hint{font-size:11px;color:var(--slate);line-height:1.5;margin-top:18px;padding:10px 11px;border:1px dashed rgba(255,255,255,0.12);border-radius:9px;}
 
-  /* ===== CANVAS AREA ===== */
-  main#stage{flex:1;min-width:0;overflow:auto;background:
-      radial-gradient(circle at 1px 1px, var(--grid-line) 1.4px, transparent 0) 0 0/22px 22px, var(--ink);
-    display:flex;justify-content:center;padding:36px 24px 80px;}
-
+  main#stage{flex:1;min-width:0;overflow:auto;background:radial-gradient(circle at 1px 1px, var(--grid-line) 1.4px, transparent 0) 0 0/22px 22px, var(--ink);display:flex;justify-content:center;padding:36px 24px 80px;}
   #canvas-wrap{position:relative;}
   #canvas-label{font-family:var(--mono);font-size:10.5px;color:var(--slate);text-align:center;margin-bottom:8px;letter-spacing:0.04em;}
-  #canvas{
-    position:relative;background:var(--paper);box-shadow:0 0 0 1px rgba(46,108,209,0.35), 0 30px 60px -20px rgba(0,0,0,0.6);
-    min-height:900px;overflow:hidden;transition:width .25s ease;
-    background-image:linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size:20px 20px;
-  }
+  #canvas{position:relative;background:var(--paper);box-shadow:0 0 0 1px rgba(46,108,209,0.35),0 30px 60px -20px rgba(0,0,0,0.6);overflow:hidden;transition:width .25s ease,height .25s ease;background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);background-size:20px 20px;}
+  #canvas.grid-off{background-image:none;}
   #canvas.preview-mode{box-shadow:none;}
   #canvas.preview-mode .el{outline:none !important;}
-  #canvas.preview-mode .el .handle, #canvas.preview-mode .el .el-toolbar{display:none !important;}
+  #canvas.preview-mode .el .handle,#canvas.preview-mode .el .el-toolbar{display:none !important;}
 
-  .canvas-empty{
-    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;
-    color:#b7bdd6;font-family:var(--mono);font-size:12px;text-align:center;pointer-events:none;
-  }
+  .canvas-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#b7bdd6;font-family:var(--mono);font-size:12px;text-align:center;pointer-events:none;}
   .canvas-empty b{color:var(--ink);font-family:var(--sans);font-size:15px;}
 
-  /* elements on canvas */
-  .el{
-    position:absolute;outline:1.5px dashed transparent;cursor:move;color:#1c2333;
-  }
+  .el{position:absolute;outline:1.5px dashed transparent;cursor:move;color:#1c2333;}
   .el:hover{outline-color:rgba(46,108,209,0.4);}
   .el.selected{outline:1.5px solid var(--blueprint);}
   .el .el-inner{width:100%;height:100%;overflow:auto;}
-  .el .handle{
-    position:absolute;width:11px;height:11px;background:var(--blueprint);border:2px solid #fff;border-radius:3px;
-    display:none;z-index:5;
-  }
+  .el .handle{position:absolute;width:11px;height:11px;background:var(--blueprint);border:2px solid #fff;border-radius:3px;display:none;z-index:5;}
   .el.selected .handle{display:block;}
   .handle.br{right:-6px;bottom:-6px;cursor:nwse-resize;}
   .handle.bl{left:-6px;bottom:-6px;cursor:nesw-resize;}
   .handle.tr{right:-6px;top:-6px;cursor:nesw-resize;}
   .handle.tl{left:-6px;top:-6px;cursor:nwse-resize;}
-  .el-toolbar{
-    position:absolute;top:-28px;left:0;background:var(--ink);color:#fff;font-family:var(--mono);font-size:10px;
-    padding:3px 8px;border-radius:5px;display:none;white-space:nowrap;z-index:6;letter-spacing:0.03em;
-  }
+  .el-toolbar{position:absolute;top:-28px;left:0;background:var(--ink);color:#fff;font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:5px;display:none;white-space:nowrap;z-index:6;letter-spacing:0.03em;}
   .el.selected .el-toolbar{display:block;}
 
   .el h2{margin:0;font-size:28px;font-weight:700;line-height:1.2;}
   .el p{margin:0;font-size:15px;line-height:1.55;}
   .el img{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit;}
-  .el .btn-el{
-    display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;text-decoration:none;
-    font-weight:600;font-size:14px;border-radius:8px;
-  }
+  .el a.btn-el{display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;text-decoration:none;font-weight:600;font-size:14px;border-radius:8px;}
+  .el.preview a.btn-el{cursor:pointer;}
   .el hr{width:100%;border:none;border-top:2px solid #d8dce6;margin:0;}
   .el .embed-wrap{width:100%;height:100%;background:repeating-linear-gradient(45deg,#eef0f6,#eef0f6 8px,#e4e7f0 8px,#e4e7f0 16px);border-radius:6px;overflow:hidden;}
   .el .section-block{width:100%;height:100%;border-radius:6px;}
-  [contenteditable]:focus{outline:2px solid var(--amber);outline-offset:2px;}
+  [contenteditable=true]:focus{outline:2px solid var(--amber);outline-offset:2px;}
 
-  /* ===== INSPECTOR ===== */
-  aside#inspector{
-    width:270px;flex-shrink:0;background:var(--ink-2);border-left:1px solid rgba(255,255,255,0.06);
-    padding:16px 16px;overflow-y:auto;
-  }
+  aside#inspector{width:270px;flex-shrink:0;background:var(--ink-2);border-left:1px solid rgba(255,255,255,0.06);padding:16px 16px;overflow-y:auto;}
   .insp-empty{color:var(--slate);font-size:12.5px;line-height:1.6;font-family:var(--mono);margin-top:8px;}
   .field{margin-bottom:14px;}
   .field label{display:block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--slate);margin-bottom:6px;}
-  .field input[type=text], .field input[type=url], .field textarea, .field select{
-    width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:6px;
-    color:#f1f3f9;padding:8px 9px;font-size:12.5px;font-family:var(--sans);resize:vertical;
-  }
+  .field input[type=text],.field input[type=url],.field textarea,.field select{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:#f1f3f9;padding:8px 9px;font-size:12.5px;font-family:var(--sans);resize:vertical;}
   .field textarea{font-family:var(--mono);font-size:11.5px;min-height:90px;}
   .field input[type=color]{width:100%;height:32px;border:1px solid rgba(255,255,255,0.12);border-radius:6px;background:transparent;padding:2px;}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .row4{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .field input[type=range]{width:100%;}
-  .rangeval{font-family:var(--mono);color:var(--blueprint-dim);font-size:11px;float:right;}
   .sec-title{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:0.07em;color:var(--blueprint-dim);margin:18px 0 10px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);}
   .sec-title:first-of-type{border-top:none;padding-top:0;margin-top:4px;}
   .delete-btn{width:100%;margin-top:6px;justify-content:center;}
 
-  /* ===== MODAL ===== */
   .modal-overlay{position:fixed;inset:0;background:rgba(10,14,26,0.7);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:200;}
   .modal-overlay.open{display:flex;}
   .modal{width:min(760px,92vw);max-height:82vh;background:var(--ink-2);border:1px solid rgba(255,255,255,0.1);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,0.5);}
-  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.08);}
-  .modal-head h3{margin:0;font-size:14px;font-family:var(--mono);font-weight:600;}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.08);gap:10px;}
+  .modal-head h3{margin:0;font-size:14px;font-family:var(--mono);font-weight:600;white-space:nowrap;}
+  .modal-head select{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);color:#fff;border-radius:6px;font-family:var(--mono);font-size:11.5px;padding:5px 8px;}
   .modal-body{padding:14px 18px;overflow:auto;flex:1;}
-  .modal-body textarea{
-    width:100%;height:420px;background:#0c1526;color:#a9d4ff;border:1px solid rgba(255,255,255,0.1);border-radius:8px;
-    font-family:var(--mono);font-size:11.5px;padding:12px;line-height:1.5;
-  }
+  .modal-body textarea{width:100%;height:420px;background:#0c1526;color:#a9d4ff;border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-family:var(--mono);font-size:11.5px;padding:12px;line-height:1.5;}
   .modal-foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid rgba(255,255,255,0.08);}
   .close-x{background:none;border:none;color:var(--slate);font-size:18px;cursor:pointer;line-height:1;}
   .close-x:hover{color:#fff;}
@@ -183,17 +137,30 @@
     <div class="brand"><b>invisi</b><span>.site</span><small>builder</small></div>
 
     <div class="device-switch">
-      <button data-w="1200" class="active">🖥 Desktop</button>
-      <button data-w="1024">💻 Laptop</button>
-      <button data-w="390">📱 Mobile</button>
+      <button data-w="1200" data-h="720" class="active">🖥 Desktop</button>
+      <button data-w="1024" data-h="640">💻 Laptop</button>
+      <button data-w="390" data-h="844">📱 Mobile</button>
+    </div>
+
+    <div class="grid-controls">
+      <label>Grid</label>
+      <input type="number" id="gridSizeInput" value="20" min="4" max="100">
+      <button class="toggle-chip active" id="snapToggle">🧲 Snap on</button>
     </div>
 
     <div class="top-actions">
       <button class="btn" id="previewBtn">👁 Preview</button>
-      <button class="btn ghost-danger" id="clearBtn">🗑 Clear</button>
-      <button class="btn primary" id="codeBtn">&lt;/&gt; View code</button>
+      <button class="btn ghost-danger" id="clearBtn">🗑 Clear page</button>
+      <button class="btn" id="codeBtn">&lt;/&gt; View code</button>
+      <button class="btn primary" id="zipBtn">⇩ Download site</button>
     </div>
   </header>
+
+  <div id="pagebar">
+    <div id="pageTabs"></div>
+    <button class="btn" id="addPageBtn" style="flex-shrink:0;">+ Page</button>
+    <div class="page-height"><span>Page height</span><input type="number" id="pageHeightInput" step="20"><span>px</span></div>
+  </div>
 
   <div id="body-row">
     <aside id="palette">
@@ -205,13 +172,13 @@
       <div class="block" draggable="true" data-type="divider"><span class="ic">—</span> Divider</div>
       <div class="block" draggable="true" data-type="section"><span class="ic">▢</span> Section / box</div>
       <div class="block" draggable="true" data-type="embed"><span class="ic">&lt;/&gt;</span> Embed HTML</div>
-      <div class="hint">Drag a block onto the page, then drag its corners to resize and drag its body to move it. Position is stored in %, so your layout scales across devices automatically.</div>
+      <div class="hint">Buttons can link to another page in this site — pick it in the Inspector under Link. Elements snap to the grid while dragging; tune grid size or turn snap off up top.</div>
     </aside>
 
     <main id="stage">
       <div id="canvas-wrap">
-        <div id="canvas-label">Desktop · 1200px reference</div>
-        <div id="canvas" style="width:1200px;">
+        <div id="canvas-label">Desktop · 1200×720</div>
+        <div id="canvas" style="width:1200px;height:720px;">
           <div class="canvas-empty" id="emptyMsg"><b>Blank page</b>Drag a block from the left to start building</div>
         </div>
       </div>
@@ -219,7 +186,7 @@
 
     <aside id="inspector">
       <div class="panel-title">Inspector</div>
-      <div id="inspEmpty" class="insp-empty">Select an element on the canvas to edit its content, style, position and size.</div>
+      <div id="inspEmpty" class="insp-empty">Select an element on the canvas to edit its content, style, position, size, and links.</div>
       <div id="inspFields" style="display:none;"></div>
     </aside>
   </div>
@@ -227,11 +194,15 @@
 
 <div class="modal-overlay" id="codeModal">
   <div class="modal">
-    <div class="modal-head"><h3>Exported HTML — invisi.site</h3><button class="close-x" id="closeModal">✕</button></div>
+    <div class="modal-head">
+      <h3>Exported HTML</h3>
+      <select id="codePageSelect"></select>
+      <button class="close-x" id="closeModal">✕</button>
+    </div>
     <div class="modal-body"><textarea id="codeOut" readonly spellcheck="false"></textarea></div>
     <div class="modal-foot">
       <button class="btn" id="copyBtn">Copy code</button>
-      <button class="btn primary" id="downloadBtn">Download .html</button>
+      <button class="btn primary" id="downloadBtn">Download this page</button>
     </div>
   </div>
 </div>
@@ -239,91 +210,189 @@
 <script>
 (function(){
   const canvas = document.getElementById('canvas');
-  const canvasWrap = document.getElementById('canvas-wrap');
-  const emptyMsg = document.getElementById('emptyMsg');
+  const emptyMsg = () => canvas.querySelector('.canvas-empty');
   const inspFields = document.getElementById('inspFields');
   const inspEmpty = document.getElementById('inspEmpty');
   const canvasLabel = document.getElementById('canvas-label');
+  const pageTabsEl = document.getElementById('pageTabs');
+  const pageHeightInput = document.getElementById('pageHeightInput');
 
   let elCount = 0;
   let selected = null;
-  let refHeight = 900; // reference px height used for % vertical math
-  const DEVICE_LABELS = {1200:'Desktop · 1200px reference',1024:'Laptop · 1024px reference',390:'Mobile · 390px reference'};
+  let gridSize = 20;
+  let snapEnabled = true;
+  let previewing = false;
+  let deviceW = 1200, deviceH = 720;
+  const DEVICE_LABEL = {1200:'Desktop',1024:'Laptop',390:'Mobile'};
 
-  // ---------- Device switching ----------
+  // ---------- page model ----------
+  let pages = {};       // id -> {name, elements:[...], height:Number, heightCustom:Bool}
+  let pageOrder = [];
+  let currentPageId = null;
+
+  function uid(prefix){ return prefix + Math.random().toString(36).slice(2,9); }
+  function slugify(name, fallbackIsHome){
+    if(fallbackIsHome) return 'index';
+    let s = (name||'page').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+    return s || 'page';
+  }
+
+  function newPage(name, height){
+    const id = uid('pg');
+    pages[id] = {name: name||'Untitled page', elements: [], height: height||deviceH, heightCustom:false};
+    pageOrder.push(id);
+    return id;
+  }
+
+  function renderPageTabs(){
+    pageTabsEl.innerHTML = '';
+    pageOrder.forEach((id,i)=>{
+      const p = pages[id];
+      const tab = document.createElement('div');
+      tab.className = 'page-tab'+(id===currentPageId?' active':'');
+      tab.innerHTML = `${i===0?'<span class="home-ic">⌂</span>':''}<span class="pname">${p.name}</span>${pageOrder.length>1?'<span class="del-x">✕</span>':''}`;
+      tab.querySelector('.pname').addEventListener('click', e=>{ e.stopPropagation(); if(id!==currentPageId) loadPage(id); });
+      tab.querySelector('.pname').addEventListener('dblclick', e=>{
+        e.stopPropagation();
+        const span = e.target;
+        span.contentEditable = true; span.focus();
+        document.execCommand('selectAll',false,null);
+        const done = ()=>{ span.contentEditable=false; p.name = span.textContent.trim()||'Untitled page'; span.textContent=p.name; renderCodePageSelect(); };
+        span.addEventListener('blur', done, {once:true});
+        span.addEventListener('keydown', ev=>{ if(ev.key==='Enter'){ ev.preventDefault(); span.blur(); } });
+      });
+      const delX = tab.querySelector('.del-x');
+      if(delX) delX.addEventListener('click', e=>{
+        e.stopPropagation();
+        if(!confirm(`Delete "${p.name}"?`)) return;
+        delete pages[id];
+        pageOrder = pageOrder.filter(x=>x!==id);
+        if(currentPageId===id) loadPage(pageOrder[0]); else renderPageTabs();
+      });
+      tab.addEventListener('click', ()=>{ if(id!==currentPageId) loadPage(id); });
+      pageTabsEl.appendChild(tab);
+    });
+  }
+
+  document.getElementById('addPageBtn').addEventListener('click', ()=>{
+    const id = newPage('Page '+(pageOrder.length+1), deviceH);
+    loadPage(id);
+  });
+
+  // ---------- serialize / load ----------
+  function serializeCurrentPage(){
+    if(!currentPageId) return;
+    const arr = [];
+    canvas.querySelectorAll('.el').forEach(el=>{
+      const dataset = {};
+      Object.keys(el.dataset).forEach(k=> dataset[k]=el.dataset[k]);
+      arr.push({type:el.dataset.type, left:el.style.left, top:el.style.top, width:el.style.width, height:el.style.height, dataset});
+    });
+    pages[currentPageId].elements = arr;
+  }
+
+  function loadPage(id){
+    serializeCurrentPage();
+    currentPageId = id;
+    canvas.querySelectorAll('.el').forEach(e=>e.remove());
+    const p = pages[id];
+    (p.elements||[]).forEach(data=>{
+      buildElementNode(data.type, {left:data.left, top:data.top, width:data.width, height:data.height}, data.dataset);
+    });
+    applyDeviceHeight();
+    deselect();
+    updateEmpty();
+    renderPageTabs();
+    pageHeightInput.value = parseInt(p.height,10);
+  }
+
+  function applyDeviceHeight(){
+    const p = pages[currentPageId];
+    if(!p) return;
+    if(!p.heightCustom){ p.height = deviceH; }
+    canvas.style.height = p.height+'px';
+    pageHeightInput.value = parseInt(p.height,10);
+  }
+
+  pageHeightInput.addEventListener('input', ()=>{
+    const p = pages[currentPageId];
+    const v = Math.max(300, parseInt(pageHeightInput.value,10)||deviceH);
+    p.height = v; p.heightCustom = true;
+    canvas.style.height = v+'px';
+  });
+
+  // ---------- device switching ----------
   document.querySelectorAll('.device-switch button').forEach(btn=>{
     btn.addEventListener('click',()=>{
       document.querySelectorAll('.device-switch button').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
-      const w = btn.dataset.w;
-      canvas.style.width = w+'px';
-      canvasLabel.textContent = DEVICE_LABELS[w];
+      deviceW = parseInt(btn.dataset.w,10);
+      deviceH = parseInt(btn.dataset.h,10);
+      canvas.style.width = deviceW+'px';
+      applyDeviceHeight();
+      canvasLabel.textContent = `${DEVICE_LABEL[deviceW]} · ${deviceW}×${pages[currentPageId].height}`;
     });
   });
 
   function updateEmpty(){
-    emptyMsg.style.display = canvas.querySelectorAll('.el').length ? 'none' : 'flex';
+    const em = emptyMsg();
+    if(em) em.style.display = canvas.querySelectorAll('.el').length ? 'none' : 'flex';
   }
 
-  // ---------- Default content per type ----------
+  // ---------- element defaults ----------
   function defaultsFor(type){
     switch(type){
-      case 'heading': return {w:60,h:9,html:'Your headline here', bg:'transparent', color:'#12203B', fs:32, align:'left', href:''};
-      case 'text': return {w:44,h:16,html:'Write something about your site, your work, or your idea. Click to edit this text right on the page.', bg:'transparent', color:'#3b4356', fs:15, align:'left'};
-      case 'image': return {w:34,h:26,src:'https://placehold.co/600x400/2E6CD1/FFFFFF?text=Image', radius:8};
-      case 'button': return {w:16,h:6,html:'Click me', bg:'#2E6CD1', color:'#ffffff', fs:14, radius:8, href:'https://example.com'};
+      case 'heading': return {w:60,h:9,html:'Your headline here',bg:'transparent',color:'#12203B',fs:32,align:'left'};
+      case 'text': return {w:44,h:16,html:'Write something about your site, your work, or your idea. Click to edit this text right on the page.',bg:'transparent',color:'#3b4356',fs:15,align:'left'};
+      case 'image': return {w:34,h:26,src:'https://placehold.co/600x400/2E6CD1/FFFFFF?text=Image',radius:8};
+      case 'button': return {w:16,h:6,html:'Click me',bg:'#2E6CD1',color:'#ffffff',fs:14,radius:8,linktype:'url',href:'https://example.com',linkpage:''};
       case 'divider': return {w:80,h:1.5};
-      case 'section': return {w:50,h:22,bg:'#EAF1FD', radius:10};
+      case 'section': return {w:50,h:22,bg:'#EAF1FD',radius:10};
       case 'embed': return {w:40,h:26,htmlraw:'<!-- Paste an <iframe> or custom HTML here -->\n<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:sans-serif;color:#667;">Embed area</div>'};
     }
   }
+  function iconFor(type){ return {heading:'H',text:'¶',image:'▧',button:'▸',divider:'—',section:'▢',embed:'</>'}[type]; }
 
-  function iconFor(type){
-    return {heading:'H',text:'¶',image:'▧',button:'▸',divider:'—',section:'▢',embed:'</>'}[type];
-  }
-
-  // ---------- Create element ----------
-  function createElement(type, xPct, yPct){
+  // ---------- build element (used both for new drops and page loads) ----------
+  function buildElementNode(type, geom, datasetOverride){
     elCount++;
-    const id = 'el'+elCount;
-    const d = defaultsFor(type);
     const el = document.createElement('div');
     el.className = 'el';
-    el.id = id;
+    el.id = 'el'+elCount+'_'+uid('');
     el.dataset.type = type;
-    el.style.left = (xPct!=null?xPct:10)+'%';
-    el.style.top = (yPct!=null?yPct:8)+'%';
-    el.style.width = d.w+'%';
-    el.style.height = d.h+'%';
+    el.style.left = geom.left; el.style.top = geom.top;
+    el.style.width = geom.width; el.style.height = geom.height;
 
+    const d = datasetOverride || defaultsFor(type);
     Object.keys(d).forEach(k=> el.dataset[k]=d[k]);
 
-    el.innerHTML = `
-      <div class="el-toolbar">${iconFor(type)} ${type}</div>
-      <div class="el-inner"></div>
-      <div class="handle tl"></div><div class="handle tr"></div>
-      <div class="handle bl"></div><div class="handle br"></div>
-    `;
+    el.innerHTML = `<div class="el-toolbar">${iconFor(type)} ${type}</div><div class="el-inner"></div>
+      <div class="handle tl"></div><div class="handle tr"></div><div class="handle bl"></div><div class="handle br"></div>`;
     canvas.appendChild(el);
     renderInner(el);
     makeInteractive(el);
+    return el;
+  }
+
+  function createElement(type, xPct, yPct){
+    const d = defaultsFor(type);
+    const el = buildElementNode(type, {left:(xPct!=null?xPct:10)+'%', top:(yPct!=null?yPct:8)+'%', width:d.w+'%', height:d.h+'%'}, (()=>{const c={...d}; delete c.w; delete c.h; return c;})());
     selectElement(el);
     updateEmpty();
     return el;
   }
 
   function renderInner(el){
-    const type = el.dataset.type;
-    const inner = el.querySelector('.el-inner');
-    const d = el.dataset;
+    const type = el.dataset.type, inner = el.querySelector('.el-inner'), d = el.dataset;
+    const editable = !previewing;
     if(type==='heading'){
-      inner.innerHTML = `<h2 contenteditable="true" style="color:${d.color};font-size:${d.fs}px;text-align:${d.align};">${d.html}</h2>`;
+      inner.innerHTML = `<h2 contenteditable="${editable}" style="color:${d.color};font-size:${d.fs}px;text-align:${d.align};">${d.html}</h2>`;
     } else if(type==='text'){
-      inner.innerHTML = `<p contenteditable="true" style="color:${d.color};font-size:${d.fs}px;text-align:${d.align};">${d.html}</p>`;
+      inner.innerHTML = `<p contenteditable="${editable}" style="color:${d.color};font-size:${d.fs}px;text-align:${d.align};">${d.html}</p>`;
     } else if(type==='image'){
       inner.innerHTML = `<img src="${d.src}" style="border-radius:${d.radius}px;" draggable="false">`;
     } else if(type==='button'){
-      inner.innerHTML = `<div class="btn-el" contenteditable="true" style="background:${d.bg};color:${d.color};font-size:${d.fs}px;border-radius:${d.radius}px;">${d.html}</div>`;
+      inner.innerHTML = `<a href="javascript:void(0)" class="btn-el" contenteditable="${editable}" style="background:${d.bg};color:${d.color};font-size:${d.fs}px;border-radius:${d.radius}px;">${d.html}</a>`;
     } else if(type==='divider'){
       inner.innerHTML = `<hr>`;
     } else if(type==='section'){
@@ -333,11 +402,9 @@
     }
   }
 
-  // ---------- Drag from palette ----------
+  // ---------- palette drag/drop ----------
   document.querySelectorAll('.block').forEach(b=>{
-    b.addEventListener('dragstart',e=>{
-      e.dataTransfer.setData('text/plain', b.dataset.type);
-    });
+    b.addEventListener('dragstart',e=> e.dataTransfer.setData('text/plain', b.dataset.type));
   });
   canvas.addEventListener('dragover', e=> e.preventDefault());
   canvas.addEventListener('drop', e=>{
@@ -345,78 +412,99 @@
     const type = e.dataTransfer.getData('text/plain');
     if(!type) return;
     const rect = canvas.getBoundingClientRect();
-    let xPct = ((e.clientX - rect.left)/rect.width*100);
-    let yPct = ((e.clientY - rect.top)/rect.height*100);
-    xPct = Math.max(0, Math.min(90, xPct));
-    yPct = Math.max(0, Math.min(90, yPct));
+    let xPct = ((e.clientX-rect.left)/rect.width*100), yPct = ((e.clientY-rect.top)/rect.height*100);
+    xPct = Math.max(0, Math.min(90,xPct)); yPct = Math.max(0, Math.min(90,yPct));
+    if(snapEnabled){
+      const xPx = Math.round((xPct/100*rect.width)/gridSize)*gridSize;
+      const yPx = Math.round((yPct/100*rect.height)/gridSize)*gridSize;
+      xPct = xPx/rect.width*100; yPct = yPx/rect.height*100;
+    }
     createElement(type, xPct.toFixed(2), yPct.toFixed(2));
   });
 
-  // ---------- Selection ----------
+  // ---------- selection ----------
   canvas.addEventListener('click', e=>{
-    if(e.target===canvas){ deselect(); }
+    if(previewing){
+      const a = e.target.closest('.btn-el');
+      if(a){
+        e.preventDefault();
+        const parentEl = a.closest('.el');
+        handleButtonClick(parentEl);
+      }
+      return;
+    }
+    if(e.target===canvas) deselect();
   });
+
+  function handleButtonClick(el){
+    const d = el.dataset;
+    if(d.linktype==='page' && d.linkpage && pages[d.linkpage]){
+      loadPage(d.linkpage);
+      canvas.classList.add('preview-mode');
+    } else if(d.href){
+      window.open(d.href, '_blank');
+    }
+  }
 
   function deselect(){
     if(selected) selected.classList.remove('selected');
-    selected = null;
-    inspFields.style.display='none';
-    inspEmpty.style.display='block';
+    selected = null; inspFields.style.display='none'; inspEmpty.style.display='block';
   }
-
   function selectElement(el){
+    if(previewing) return;
     if(selected) selected.classList.remove('selected');
-    selected = el;
-    el.classList.add('selected');
+    selected = el; el.classList.add('selected');
     buildInspector(el);
   }
 
-  // ---------- interact.js: drag + resize ----------
+  // ---------- drag + resize with grid snap ----------
+  function gridSnapPoint(x,y){
+    if(!snapEnabled) return {x,y,range:Infinity};
+    return {x:Math.round(x/gridSize)*gridSize, y:Math.round(y/gridSize)*gridSize};
+  }
+  function gridSnapSize(width,height){
+    if(!snapEnabled) return {width,height,range:Infinity};
+    return {width:Math.max(gridSize,Math.round(width/gridSize)*gridSize), height:Math.max(gridSize,Math.round(height/gridSize)*gridSize)};
+  }
+
   function makeInteractive(el){
     el.addEventListener('mousedown', ()=> selectElement(el));
-
     interact(el).draggable({
-      listeners:{
-        move(event){
-          const target = event.target;
-          const rect = canvas.getBoundingClientRect();
-          let leftPx = (parseFloat(target.style.left)/100*rect.width) + event.dx;
-          let topPx = (parseFloat(target.style.top)/100*rect.height) + event.dy;
-          leftPx = Math.max(0, Math.min(rect.width-20, leftPx));
-          topPx = Math.max(0, Math.min(rect.height-10, topPx));
-          target.style.left = (leftPx/rect.width*100).toFixed(2)+'%';
-          target.style.top = (topPx/rect.height*100).toFixed(2)+'%';
-          if(target===selected) updatePosFields();
-        }
-      },
-      modifiers:[ interact.modifiers.restrictRect({restriction:'parent'}) ],
+      listeners:{ move(event){
+        const target = event.target, rect = canvas.getBoundingClientRect();
+        let leftPx = (parseFloat(target.style.left)/100*rect.width) + event.dx;
+        let topPx = (parseFloat(target.style.top)/100*rect.height) + event.dy;
+        leftPx = Math.max(0, Math.min(rect.width-20, leftPx));
+        topPx = Math.max(0, Math.min(rect.height-10, topPx));
+        target.style.left = (leftPx/rect.width*100).toFixed(2)+'%';
+        target.style.top = (topPx/rect.height*100).toFixed(2)+'%';
+        if(target===selected) updatePosFields();
+      }},
+      modifiers:[
+        interact.modifiers.snap({targets:[gridSnapPoint], relativePoints:[{x:0,y:0}], offset:'parent'}),
+        interact.modifiers.restrictRect({restriction:'parent'})
+      ],
       ignoreFrom:'[contenteditable], .handle'
     }).resizable({
       edges:{left:true,right:true,bottom:true,top:true},
-      listeners:{
-        move(event){
-          const target = event.target;
-          const rect = canvas.getBoundingClientRect();
-          let widthPct = (event.rect.width/rect.width*100);
-          let heightPct = (event.rect.height/rect.height*100);
-          let leftPct = (event.deltaRect.left/rect.width*100) + parseFloat(target.style.left);
-          let topPct = (event.deltaRect.top/rect.height*100) + parseFloat(target.style.top);
-          Object.assign(target.style,{
-            width: widthPct.toFixed(2)+'%',
-            height: heightPct.toFixed(2)+'%',
-            left: leftPct.toFixed(2)+'%',
-            top: topPct.toFixed(2)+'%'
-          });
-          if(target===selected){ updatePosFields(); }
-        }
-      },
-      modifiers:[ interact.modifiers.restrictEdges({outer:'parent'}), interact.modifiers.restrictSize({min:{width:24,height:16}}) ]
+      listeners:{ move(event){
+        const target = event.target, rect = canvas.getBoundingClientRect();
+        let widthPct = (event.rect.width/rect.width*100), heightPct = (event.rect.height/rect.height*100);
+        let leftPct = (event.deltaRect.left/rect.width*100) + parseFloat(target.style.left);
+        let topPct = (event.deltaRect.top/rect.height*100) + parseFloat(target.style.top);
+        Object.assign(target.style,{width:widthPct.toFixed(2)+'%', height:heightPct.toFixed(2)+'%', left:leftPct.toFixed(2)+'%', top:topPct.toFixed(2)+'%'});
+        if(target===selected) updatePosFields();
+      }},
+      modifiers:[
+        interact.modifiers.snapSize({targets:[gridSnapSize]}),
+        interact.modifiers.restrictEdges({outer:'parent'}),
+        interact.modifiers.restrictSize({min:{width:24,height:16}})
+      ]
     });
   }
 
   function updatePosFields(){
-    const xI=document.getElementById('f_x'), yI=document.getElementById('f_y'),
-          wI=document.getElementById('f_w'), hI=document.getElementById('f_h');
+    const xI=document.getElementById('f_x'), yI=document.getElementById('f_y'), wI=document.getElementById('f_w'), hI=document.getElementById('f_h');
     if(!xI || !selected) return;
     xI.value = parseFloat(selected.style.left).toFixed(1);
     yI.value = parseFloat(selected.style.top).toFixed(1);
@@ -424,37 +512,44 @@
     hI.value = parseFloat(selected.style.height).toFixed(1);
   }
 
-  // ---------- Inspector ----------
-  function field(label, inputHtml){
-    return `<div class="field"><label>${label}</label>${inputHtml}</div>`;
+  document.getElementById('gridSizeInput').addEventListener('input', e=>{ gridSize = Math.max(2, parseInt(e.target.value,10)||20); canvas.style.backgroundSize = gridSize+'px '+gridSize+'px'; });
+  document.getElementById('snapToggle').addEventListener('click', e=>{
+    snapEnabled = !snapEnabled;
+    e.target.classList.toggle('active', snapEnabled);
+    e.target.textContent = snapEnabled ? '🧲 Snap on' : '🧲 Snap off';
+  });
+
+  // ---------- inspector ----------
+  function field(label, html){ return `<div class="field"><label>${label}</label>${html}</div>`; }
+  function toHex(c){ return (!c || c==='transparent') ? '#ffffff' : c; }
+
+  function pageOptions(selectedId){
+    return pageOrder.map(id=> `<option value="${id}" ${id===selectedId?'selected':''}>${pages[id].name}</option>`).join('');
   }
 
   function buildInspector(el){
-    inspEmpty.style.display='none';
-    inspFields.style.display='block';
-    const type = el.dataset.type;
-    const d = el.dataset;
+    inspEmpty.style.display='none'; inspFields.style.display='block';
+    const type = el.dataset.type, d = el.dataset;
     let html = `<div class="sec-title">Content</div>`;
 
     if(type==='heading' || type==='text'){
       html += field('Text', `<textarea id="f_html">${d.html}</textarea>`);
-      html += `<div class="row2">`+
-        field('Text color', `<input type="color" id="f_color" value="${toHex(d.color)}">`)+
-        field('Font size', `<input type="text" id="f_fs" value="${d.fs}">`)+`</div>`;
-      html += field('Align', `<select id="f_align">
-        <option value="left" ${d.align==='left'?'selected':''}>Left</option>
-        <option value="center" ${d.align==='center'?'selected':''}>Center</option>
-        <option value="right" ${d.align==='right'?'selected':''}>Right</option>
-      </select>`);
+      html += `<div class="row2">${field('Text color',`<input type="color" id="f_color" value="${toHex(d.color)}">`)}${field('Font size',`<input type="text" id="f_fs" value="${d.fs}">`)}</div>`;
+      html += field('Align', `<select id="f_align"><option value="left" ${d.align==='left'?'selected':''}>Left</option><option value="center" ${d.align==='center'?'selected':''}>Center</option><option value="right" ${d.align==='right'?'selected':''}>Right</option></select>`);
     } else if(type==='image'){
       html += field('Image URL', `<input type="text" id="f_src" value="${d.src}">`);
       html += field('Corner radius (px)', `<input type="text" id="f_radius" value="${d.radius}">`);
     } else if(type==='button'){
       html += field('Label', `<input type="text" id="f_html" value="${d.html}">`);
-      html += field('Link URL', `<input type="text" id="f_href" value="${d.href}">`);
-      html += `<div class="row2">`+
-        field('Background', `<input type="color" id="f_bg" value="${toHex(d.bg)}">`)+
-        field('Text color', `<input type="color" id="f_color" value="${toHex(d.color)}">`)+`</div>`;
+      html += `<div class="sec-title">Link</div>`;
+      html += field('Goes to', `<select id="f_linktype"><option value="url" ${d.linktype==='url'?'selected':''}>External URL</option><option value="page" ${d.linktype==='page'?'selected':''}>A page in this site</option></select>`);
+      if(d.linktype==='page'){
+        html += field('Page', `<select id="f_linkpage">${pageOptions(d.linkpage)}</select>`);
+      } else {
+        html += field('URL', `<input type="text" id="f_href" value="${d.href||''}">`);
+      }
+      html += `<div class="sec-title">Style</div>`;
+      html += `<div class="row2">${field('Background',`<input type="color" id="f_bg" value="${toHex(d.bg)}">`)}${field('Text color',`<input type="color" id="f_color" value="${toHex(d.color)}">`)}</div>`;
       html += field('Corner radius (px)', `<input type="text" id="f_radius" value="${d.radius}">`);
     } else if(type==='section'){
       html += field('Background', `<input type="color" id="f_bg" value="${toHex(d.bg)}">`);
@@ -466,59 +561,46 @@
     }
 
     html += `<div class="sec-title">Position &amp; size (%)</div>
-      <div class="row2">
-        ${field('X', `<input type="text" id="f_x" value="${parseFloat(el.style.left).toFixed(1)}">`)}
-        ${field('Y', `<input type="text" id="f_y" value="${parseFloat(el.style.top).toFixed(1)}">`)}
-      </div>
-      <div class="row2">
-        ${field('Width', `<input type="text" id="f_w" value="${parseFloat(el.style.width).toFixed(1)}">`)}
-        ${field('Height', `<input type="text" id="f_h" value="${parseFloat(el.style.height).toFixed(1)}">`)}
-      </div>
-      <button class="btn ghost-danger delete-btn" id="delBtn">🗑 Delete element</button>
-    `;
+      <div class="row2">${field('X',`<input type="text" id="f_x" value="${parseFloat(el.style.left).toFixed(1)}">`)}${field('Y',`<input type="text" id="f_y" value="${parseFloat(el.style.top).toFixed(1)}">`)}</div>
+      <div class="row2">${field('Width',`<input type="text" id="f_w" value="${parseFloat(el.style.width).toFixed(1)}">`)}${field('Height',`<input type="text" id="f_h" value="${parseFloat(el.style.height).toFixed(1)}">`)}</div>
+      <button class="btn ghost-danger delete-btn" id="delBtn">🗑 Delete element</button>`;
 
     inspFields.innerHTML = html;
     wireInspector(el);
   }
 
-  function toHex(c){
-    if(!c || c==='transparent') return '#ffffff';
-    return c;
-  }
-
   function wireInspector(el){
     const d = el.dataset;
-    const bind = (id, key, cb)=>{
-      const node = document.getElementById(id);
-      if(!node) return;
-      node.addEventListener('input', ()=>{
-        d[key] = node.value;
-        renderInner(el);
-        if(cb) cb();
-      });
-    };
-    bind('f_html','html'); bind('f_htmlraw','htmlraw'); bind('f_src','src');
-    bind('f_color','color'); bind('f_bg','bg'); bind('f_fs','fs');
-    bind('f_radius','radius'); bind('f_align','align'); bind('f_href','href');
+    const bindInput = (id,key)=>{ const n=document.getElementById(id); if(!n) return; n.addEventListener('input', ()=>{ d[key]=n.value; renderInner(el); }); };
+    bindInput('f_html','html'); bindInput('f_htmlraw','htmlraw'); bindInput('f_src','src');
+    bindInput('f_color','color'); bindInput('f_bg','bg'); bindInput('f_fs','fs'); bindInput('f_radius','radius');
+    bindInput('f_href','href');
+
+    const alignSel = document.getElementById('f_align');
+    if(alignSel) alignSel.addEventListener('change', ()=>{ d.align=alignSel.value; renderInner(el); });
+
+    const linkPageSel = document.getElementById('f_linkpage');
+    if(linkPageSel) linkPageSel.addEventListener('change', ()=>{ d.linkpage=linkPageSel.value; });
+
+    const linkTypeSel = document.getElementById('f_linktype');
+    if(linkTypeSel) linkTypeSel.addEventListener('change', ()=>{ d.linktype=linkTypeSel.value; if(d.linktype==='page' && !d.linkpage) d.linkpage=pageOrder.find(id=>id!==currentPageId)||currentPageId; buildInspector(el); });
 
     ['f_x','f_y','f_w','f_h'].forEach(id=>{
-      const node = document.getElementById(id);
-      if(!node) return;
-      node.addEventListener('input', ()=>{
-        const x=document.getElementById('f_x').value, y=document.getElementById('f_y').value,
-              w=document.getElementById('f_w').value, h=document.getElementById('f_h').value;
-        el.style.left=x+'%'; el.style.top=y+'%'; el.style.width=w+'%'; el.style.height=h+'%';
+      const n = document.getElementById(id);
+      if(!n) return;
+      n.addEventListener('input', ()=>{
+        el.style.left = document.getElementById('f_x').value+'%';
+        el.style.top = document.getElementById('f_y').value+'%';
+        el.style.width = document.getElementById('f_w').value+'%';
+        el.style.height = document.getElementById('f_h').value+'%';
       });
     });
 
-    document.getElementById('delBtn').addEventListener('click', ()=>{
-      el.remove(); deselect(); updateEmpty();
-    });
+    document.getElementById('delBtn').addEventListener('click', ()=>{ el.remove(); deselect(); updateEmpty(); });
   }
 
-  // ---------- Preview toggle ----------
+  // ---------- preview ----------
   const previewBtn = document.getElementById('previewBtn');
-  let previewing=false;
   previewBtn.addEventListener('click', ()=>{
     previewing = !previewing;
     canvas.classList.toggle('preview-mode', previewing);
@@ -526,94 +608,126 @@
     if(previewing) deselect();
     document.getElementById('palette').style.visibility = previewing?'hidden':'visible';
     document.getElementById('inspector').style.visibility = previewing?'hidden':'visible';
+    canvas.querySelectorAll('.el').forEach(renderInner);
   });
 
-  // ---------- Clear ----------
   document.getElementById('clearBtn').addEventListener('click', ()=>{
-    if(canvas.querySelectorAll('.el').length && !confirm('Clear the whole page?')) return;
+    if(canvas.querySelectorAll('.el').length && !confirm('Clear this page?')) return;
     canvas.querySelectorAll('.el').forEach(e=>e.remove());
     deselect(); updateEmpty();
   });
 
-  // ---------- Code export ----------
-  function generateCode(){
+  // ---------- code generation ----------
+  function elementsHTML(elements){
     let body = '';
-    canvas.querySelectorAll('.el').forEach(el=>{
-      const type = el.dataset.type;
-      const style = `position:absolute;left:${el.style.left};top:${el.style.top};width:${el.style.width};height:${el.style.height};`;
-      const d = el.dataset;
+    elements.forEach(data=>{
+      const type = data.type, d = data.dataset;
+      const style = `position:absolute;left:${data.left};top:${data.top};width:${data.width};height:${data.height};`;
       let inner = '';
       if(type==='heading') inner = `<h2 style="margin:0;color:${d.color};font-size:${d.fs}px;text-align:${d.align};font-family:Inter,sans-serif;">${d.html}</h2>`;
       else if(type==='text') inner = `<p style="margin:0;color:${d.color};font-size:${d.fs}px;text-align:${d.align};font-family:Inter,sans-serif;line-height:1.55;">${d.html}</p>`;
       else if(type==='image') inner = `<img src="${d.src}" style="width:100%;height:100%;object-fit:cover;border-radius:${d.radius}px;display:block;">`;
-      else if(type==='button') inner = `<a href="${d.href||'#'}" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;text-decoration:none;font-weight:600;font-family:Inter,sans-serif;background:${d.bg};color:${d.color};font-size:${d.fs}px;border-radius:${d.radius}px;">${d.html}</a>`;
+      else if(type==='button'){
+        let href = '#';
+        if(d.linktype==='page' && d.linkpage && pages[d.linkpage]) href = slugify(pages[d.linkpage].name, pageOrder[0]===d.linkpage)+'.html';
+        else if(d.href) href = d.href;
+        inner = `<a href="${href}" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;text-decoration:none;font-weight:600;font-family:Inter,sans-serif;background:${d.bg};color:${d.color};font-size:${d.fs}px;border-radius:${d.radius}px;">${d.html}</a>`;
+      }
       else if(type==='divider') inner = `<hr style="width:100%;border:none;border-top:2px solid #d8dce6;margin:0;">`;
       else if(type==='section') inner = `<div style="width:100%;height:100%;background:${d.bg};border-radius:${d.radius}px;"></div>`;
       else if(type==='embed') inner = d.htmlraw;
-
       body += `    <div style="${style}">\n      ${inner}\n    </div>\n`;
     });
+    return body;
+  }
 
+  function pageDoc(pageId){
+    serializeCurrentPage();
+    const p = pages[pageId];
+    const isHome = pageOrder[0]===pageId;
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My invisi.site page</title>
+<title>${p.name} — my invisi.site page</title>
 <style>
   *{box-sizing:border-box;}
   body{margin:0;font-family:Inter,sans-serif;background:#FAFAF7;}
-  .page-container{position:relative;width:100%;max-width:1200px;margin:0 auto;min-height:900px;}
+  .page-container{position:relative;width:100%;max-width:1200px;margin:0 auto;min-height:${p.height}px;}
   @media (max-width:1024px){ .page-container{max-width:1024px;} }
   @media (max-width:600px){ .page-container{max-width:100%;} }
 </style>
 </head>
 <body>
   <div class="page-container">
-${body}  </div>
+${elementsHTML(p.elements)}  </div>
 </body>
 </html>`;
   }
 
+  // ---------- code modal ----------
   const codeModal = document.getElementById('codeModal');
+  const codePageSelect = document.getElementById('codePageSelect');
+  function renderCodePageSelect(){
+    codePageSelect.innerHTML = pageOrder.map(id=>`<option value="${id}" ${id===currentPageId?'selected':''}>${pages[id].name}${pageOrder[0]===id?' (home)':''}</option>`).join('');
+  }
+  function showCode(pageId){ document.getElementById('codeOut').value = pageDoc(pageId); }
+
   document.getElementById('codeBtn').addEventListener('click', ()=>{
-    document.getElementById('codeOut').value = generateCode();
-    codeModal.classList.add('open');
+    renderCodePageSelect(); showCode(currentPageId); codeModal.classList.add('open');
   });
+  codePageSelect.addEventListener('change', ()=> showCode(codePageSelect.value));
   document.getElementById('closeModal').addEventListener('click', ()=> codeModal.classList.remove('open'));
   codeModal.addEventListener('click', e=>{ if(e.target===codeModal) codeModal.classList.remove('open'); });
 
   document.getElementById('copyBtn').addEventListener('click', ()=>{
-    const ta = document.getElementById('codeOut');
-    ta.select(); document.execCommand('copy');
-    const btn = document.getElementById('copyBtn');
-    const old = btn.textContent; btn.textContent='Copied ✓';
+    const ta = document.getElementById('codeOut'); ta.select(); document.execCommand('copy');
+    const btn = document.getElementById('copyBtn'); const old = btn.textContent; btn.textContent='Copied ✓';
     setTimeout(()=>btn.textContent=old, 1400);
   });
-
   document.getElementById('downloadBtn').addEventListener('click', ()=>{
-    const blob = new Blob([generateCode()], {type:'text/html'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'invisi-site-page.html';
-    a.click();
+    const pid = codePageSelect.value;
+    const fname = slugify(pages[pid].name, pageOrder[0]===pid)+'.html';
+    const blob = new Blob([pageDoc(pid)], {type:'text/html'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fname; a.click();
   });
 
-  // ---------- seed a starter layout ----------
-  createElement('heading', 6, 5);
-  document.getElementById('el1').dataset.html = 'Welcome to invisi.site';
-  document.getElementById('el1').dataset.w = 70; document.getElementById('el1').style.width='70%';
-  renderInner(document.getElementById('el1'));
+  document.getElementById('zipBtn').addEventListener('click', async ()=>{
+    serializeCurrentPage();
+    const zip = new JSZip();
+    const used = {};
+    pageOrder.forEach(id=>{
+      let name = slugify(pages[id].name, pageOrder[0]===id);
+      if(used[name]){ name = name+'-'+used[name]; used[name]=(used[name]||1)+1; } else { used[name]=1; }
+      zip.file(name+'.html', pageDoc(id));
+    });
+    const blob = await zip.generateAsync({type:'blob'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'invisi-site.zip'; a.click();
+  });
 
-  createElement('text', 6, 16);
-  document.getElementById('el2').dataset.html = 'This is a blank canvas — drag blocks from the left panel, drop them anywhere, then resize by dragging the corner handles. Click ⟨/⟩ View code any time to grab the HTML.';
-  document.getElementById('el2').dataset.w = 55;
-  document.getElementById('el2').style.width='55%';
-  renderInner(document.getElementById('el2'));
+  // ---------- seed starter site: Home + About, linked by button ----------
+  const homeId = newPage('Home', deviceH);
+  const aboutId = newPage('About', deviceH);
+  currentPageId = homeId;
 
-  createElement('button', 6, 30);
-  deselect();
-  updateEmpty();
+  buildElementNode('heading', {left:'6%',top:'5%',width:'70%',height:'9%'}, {html:'Welcome to invisi.site',bg:'transparent',color:'#12203B',fs:32,align:'left'});
+  buildElementNode('text', {left:'6%',top:'16%',width:'55%',height:'16%'}, {html:'This is a blank canvas — drag blocks from the left panel, drop them anywhere, and resize with the corner handles. This button jumps to the About page to show internal linking.',bg:'transparent',color:'#3b4356',fs:15,align:'left'});
+  buildElementNode('button', {left:'6%',top:'34%',width:'18%',height:'6%'}, {html:'Learn more →',bg:'#2E6CD1',color:'#ffffff',fs:14,radius:8,linktype:'page',href:'',linkpage:aboutId});
+
+  pages[homeId].elements = [];
+  serializeCurrentPage();
+  canvas.querySelectorAll('.el').forEach(e=>e.remove());
+  currentPageId = aboutId;
+  buildElementNode('heading', {left:'6%',top:'5%',width:'60%',height:'9%'}, {html:'About this site',bg:'transparent',color:'#12203B',fs:28,align:'left'});
+  buildElementNode('text', {left:'6%',top:'16%',width:'55%',height:'14%'}, {html:'Every page you add here becomes its own tab up top. Buttons can link between pages or out to any URL on the web.',bg:'transparent',color:'#3b4356',fs:15,align:'left'});
+  buildElementNode('button', {left:'6%',top:'32%',width:'16%',height:'6%'}, {html:'← Back home',bg:'#F2A93B',color:'#1a1200',fs:14,radius:8,linktype:'page',href:'',linkpage:homeId});
+  pages[aboutId].elements = [];
+  serializeCurrentPage();
+  canvas.querySelectorAll('.el').forEach(e=>e.remove());
+
+  currentPageId = null; // prevents loadPage's auto-save from wiping the page we just serialized
+  loadPage(homeId);
 })();
 </script>
 </body>
