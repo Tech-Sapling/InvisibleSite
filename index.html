@@ -1,189 +1,620 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>&#8203;</title>
-    <meta charset="utf-8">
-    <link rel="icon" href="https://i.imgur.com/n5XWUzc.png">
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            margin: 40px;
-            background-color: white;
-            color: #000;
-            cursor: default;
-        }
-        h1 {
-            font-size: 24px;
-            font-weight: bold;
-            font-family: "Courier New", Courier, monospace;
-        }
-        hr {
-            border: 0;
-            border-top: 1px solid #ccc;
-            margin: 20px 0;
-        }
-        address.footer {
-            font-style: italic;
-            color: #555;
-        }
-        p.trace {
-            font-size: 12px;
-            color: #888;
-            font-family: "Courier New", Courier, monospace;
-        }
-        #hidden-trigger {
-            background: none;
-            border: none;
-            padding: 0;
-            margin: 0;
-            font: inherit;
-            color: inherit;
-            cursor: default; /* changed from pointer so it doesn't look clickable */
-            outline: none;
-            appearance: none;
-            -webkit-appearance: none;
-            display: inline;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        #hidden-trigger:hover,
-        #hidden-trigger:focus,
-        #hidden-trigger:active {
-            background: none;
-            outline: none;
-            box-shadow: none;
-            color: inherit;
-            cursor: default; /* ensure hover doesn't change the cursor */
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>invisi.site — build</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/interactjs/1.10.17/interact.min.js"></script>
+<style>
+  :root{
+    --ink:#12203B;
+    --ink-2:#1B2C4F;
+    --blueprint:#2E6CD1;
+    --blueprint-dim:#4C7CC8;
+    --paper:#FAFAF7;
+    --grid-line:rgba(46,108,209,0.16);
+    --amber:#F2A93B;
+    --amber-dim:#D6922A;
+    --slate:#8492AC;
+    --slate-dark:#5B6478;
+    --ok:#3FA796;
+    --danger:#E0574C;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;background:var(--ink);font-family:var(--sans);color:#e8ecf5;}
 
-        /* overlay / iframe styles */
-        #embed-overlay {
-            position: fixed;
-            inset: 0;
-            width: 100vw;
-            height: 100vh;
-            background: black;
-            display: none;
-            z-index: 2147483647; /* very high */
-        }
-        #embed-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-            background: black;
-        }
-    </style>
+  /* ===== APP SHELL ===== */
+  #app{display:flex;flex-direction:column;height:100vh;}
+
+  header#topbar{
+    display:flex;align-items:center;gap:18px;
+    background:var(--ink-2);border-bottom:1px solid rgba(255,255,255,0.06);
+    padding:10px 18px;flex-shrink:0;z-index:50;
+  }
+  .brand{display:flex;align-items:baseline;gap:2px;font-family:var(--mono);font-weight:600;letter-spacing:-0.5px;}
+  .brand b{color:#fff;font-size:16px;}
+  .brand span{color:var(--blueprint-dim);font-size:16px;}
+  .brand small{color:var(--slate);font-family:var(--mono);font-size:10px;margin-left:8px;border:1px solid rgba(255,255,255,0.1);padding:2px 6px;border-radius:20px;text-transform:uppercase;letter-spacing:0.06em;}
+
+  .device-switch{display:flex;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:3px;gap:2px;margin-left:auto;}
+  .device-switch button{
+    background:transparent;border:none;color:var(--slate);padding:6px 12px;border-radius:6px;cursor:pointer;
+    font-family:var(--mono);font-size:11px;display:flex;align-items:center;gap:6px;letter-spacing:0.02em;
+  }
+  .device-switch button.active{background:var(--blueprint);color:#fff;}
+  .device-switch button:hover:not(.active){color:#fff;}
+
+  .top-actions{display:flex;gap:8px;}
+  .btn{
+    font-family:var(--mono);font-size:11.5px;letter-spacing:0.02em;border-radius:7px;border:1px solid rgba(255,255,255,0.1);
+    background:rgba(255,255,255,0.03);color:#e8ecf5;padding:8px 13px;cursor:pointer;display:flex;align-items:center;gap:6px;
+    transition:background .15s,border-color .15s;
+  }
+  .btn:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);}
+  .btn.primary{background:var(--amber);color:#1a1200;border-color:var(--amber);font-weight:600;}
+  .btn.primary:hover{background:var(--amber-dim);}
+  .btn.ghost-danger{color:#f2a49c;}
+  .btn.ghost-danger:hover{background:rgba(224,87,76,0.15);border-color:rgba(224,87,76,0.4);}
+
+  /* ===== BODY LAYOUT ===== */
+  #body-row{display:flex;flex:1;min-height:0;}
+
+  aside#palette{
+    width:210px;flex-shrink:0;background:var(--ink-2);border-right:1px solid rgba(255,255,255,0.06);
+    padding:16px 14px;overflow-y:auto;
+  }
+  .panel-title{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--slate);margin:4px 2px 10px;}
+  .block{
+    display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
+    border-radius:9px;padding:10px 11px;margin-bottom:8px;cursor:grab;font-size:13px;color:#dfe4ee;
+    transition:border-color .15s, background .15s, transform .1s;
+  }
+  .block:hover{border-color:var(--blueprint-dim);background:rgba(46,108,209,0.1);}
+  .block:active{cursor:grabbing;transform:scale(0.98);}
+  .block .ic{
+    width:26px;height:26px;border-radius:6px;background:rgba(46,108,209,0.18);color:var(--blueprint-dim);
+    display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;
+  }
+  .hint{font-size:11px;color:var(--slate);line-height:1.5;margin-top:18px;padding:10px 11px;border:1px dashed rgba(255,255,255,0.12);border-radius:9px;}
+
+  /* ===== CANVAS AREA ===== */
+  main#stage{flex:1;min-width:0;overflow:auto;background:
+      radial-gradient(circle at 1px 1px, var(--grid-line) 1.4px, transparent 0) 0 0/22px 22px, var(--ink);
+    display:flex;justify-content:center;padding:36px 24px 80px;}
+
+  #canvas-wrap{position:relative;}
+  #canvas-label{font-family:var(--mono);font-size:10.5px;color:var(--slate);text-align:center;margin-bottom:8px;letter-spacing:0.04em;}
+  #canvas{
+    position:relative;background:var(--paper);box-shadow:0 0 0 1px rgba(46,108,209,0.35), 0 30px 60px -20px rgba(0,0,0,0.6);
+    min-height:900px;overflow:hidden;transition:width .25s ease;
+    background-image:linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size:20px 20px;
+  }
+  #canvas.preview-mode{box-shadow:none;}
+  #canvas.preview-mode .el{outline:none !important;}
+  #canvas.preview-mode .el .handle, #canvas.preview-mode .el .el-toolbar{display:none !important;}
+
+  .canvas-empty{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;
+    color:#b7bdd6;font-family:var(--mono);font-size:12px;text-align:center;pointer-events:none;
+  }
+  .canvas-empty b{color:var(--ink);font-family:var(--sans);font-size:15px;}
+
+  /* elements on canvas */
+  .el{
+    position:absolute;outline:1.5px dashed transparent;cursor:move;color:#1c2333;
+  }
+  .el:hover{outline-color:rgba(46,108,209,0.4);}
+  .el.selected{outline:1.5px solid var(--blueprint);}
+  .el .el-inner{width:100%;height:100%;overflow:auto;}
+  .el .handle{
+    position:absolute;width:11px;height:11px;background:var(--blueprint);border:2px solid #fff;border-radius:3px;
+    display:none;z-index:5;
+  }
+  .el.selected .handle{display:block;}
+  .handle.br{right:-6px;bottom:-6px;cursor:nwse-resize;}
+  .handle.bl{left:-6px;bottom:-6px;cursor:nesw-resize;}
+  .handle.tr{right:-6px;top:-6px;cursor:nesw-resize;}
+  .handle.tl{left:-6px;top:-6px;cursor:nwse-resize;}
+  .el-toolbar{
+    position:absolute;top:-28px;left:0;background:var(--ink);color:#fff;font-family:var(--mono);font-size:10px;
+    padding:3px 8px;border-radius:5px;display:none;white-space:nowrap;z-index:6;letter-spacing:0.03em;
+  }
+  .el.selected .el-toolbar{display:block;}
+
+  .el h2{margin:0;font-size:28px;font-weight:700;line-height:1.2;}
+  .el p{margin:0;font-size:15px;line-height:1.55;}
+  .el img{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit;}
+  .el .btn-el{
+    display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;text-decoration:none;
+    font-weight:600;font-size:14px;border-radius:8px;
+  }
+  .el hr{width:100%;border:none;border-top:2px solid #d8dce6;margin:0;}
+  .el .embed-wrap{width:100%;height:100%;background:repeating-linear-gradient(45deg,#eef0f6,#eef0f6 8px,#e4e7f0 8px,#e4e7f0 16px);border-radius:6px;overflow:hidden;}
+  .el .section-block{width:100%;height:100%;border-radius:6px;}
+  [contenteditable]:focus{outline:2px solid var(--amber);outline-offset:2px;}
+
+  /* ===== INSPECTOR ===== */
+  aside#inspector{
+    width:270px;flex-shrink:0;background:var(--ink-2);border-left:1px solid rgba(255,255,255,0.06);
+    padding:16px 16px;overflow-y:auto;
+  }
+  .insp-empty{color:var(--slate);font-size:12.5px;line-height:1.6;font-family:var(--mono);margin-top:8px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--slate);margin-bottom:6px;}
+  .field input[type=text], .field input[type=url], .field textarea, .field select{
+    width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:6px;
+    color:#f1f3f9;padding:8px 9px;font-size:12.5px;font-family:var(--sans);resize:vertical;
+  }
+  .field textarea{font-family:var(--mono);font-size:11.5px;min-height:90px;}
+  .field input[type=color]{width:100%;height:32px;border:1px solid rgba(255,255,255,0.12);border-radius:6px;background:transparent;padding:2px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .row4{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .field input[type=range]{width:100%;}
+  .rangeval{font-family:var(--mono);color:var(--blueprint-dim);font-size:11px;float:right;}
+  .sec-title{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:0.07em;color:var(--blueprint-dim);margin:18px 0 10px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);}
+  .sec-title:first-of-type{border-top:none;padding-top:0;margin-top:4px;}
+  .delete-btn{width:100%;margin-top:6px;justify-content:center;}
+
+  /* ===== MODAL ===== */
+  .modal-overlay{position:fixed;inset:0;background:rgba(10,14,26,0.7);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:200;}
+  .modal-overlay.open{display:flex;}
+  .modal{width:min(760px,92vw);max-height:82vh;background:var(--ink-2);border:1px solid rgba(255,255,255,0.1);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,0.5);}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.08);}
+  .modal-head h3{margin:0;font-size:14px;font-family:var(--mono);font-weight:600;}
+  .modal-body{padding:14px 18px;overflow:auto;flex:1;}
+  .modal-body textarea{
+    width:100%;height:420px;background:#0c1526;color:#a9d4ff;border:1px solid rgba(255,255,255,0.1);border-radius:8px;
+    font-family:var(--mono);font-size:11.5px;padding:12px;line-height:1.5;
+  }
+  .modal-foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid rgba(255,255,255,0.08);}
+  .close-x{background:none;border:none;color:var(--slate);font-size:18px;cursor:pointer;line-height:1;}
+  .close-x:hover{color:#fff;}
+</style>
 </head>
 <body>
-    <h1>Oops..</h1>
-    <p>The requested <button id="hidden-trigger" onclick="toggleEmbed()">URL</button> was not found on this domain name. If this is your domain and you are having issues connecting, contact your d[...]
-    <p class="trace">
-        Request-ID: <span id="reqid"></span><br>
-        X-Error-Code: INDEXHTML_NOT_FETCHED<br>
-        X-Forwarded-Proto: https<br>
-        X-Cache: MISS<br>
-        Generated by index.html/2.5.9
-    </p>
-    <hr>
-    <address class="footer">index.html/2.5.9 (branch) Server at clever.loading Port 443 &mdash; <span id="timestamp"></span></address>
+<div id="app">
 
-    <!-- embed overlay -->
-    <div id="embed-overlay" aria-hidden="true">
-        <iframe id="embed-iframe" src="about:blank" title="" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-modals"></iframe>
+  <header id="topbar">
+    <div class="brand"><b>invisi</b><span>.site</span><small>builder</small></div>
+
+    <div class="device-switch">
+      <button data-w="1200" class="active">🖥 Desktop</button>
+      <button data-w="1024">💻 Laptop</button>
+      <button data-w="390">📱 Mobile</button>
     </div>
 
-    <script>
-        // make the tab name effectively empty (zero-width space)
-        document.title = '\u200B';
+    <div class="top-actions">
+      <button class="btn" id="previewBtn">👁 Preview</button>
+      <button class="btn ghost-danger" id="clearBtn">🗑 Clear</button>
+      <button class="btn primary" id="codeBtn">&lt;/&gt; View code</button>
+    </div>
+  </header>
 
-        // timestamp
-        const now = new Date();
-        const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-        const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-        const pad = n => String(n).padStart(2, '0');
-        const ts = `${days[now.getUTCDay()]}, ${pad(now.getUTCDate())} ${months[now.getUTCMonth()]} ${now.getUTCFullYear()} ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())}`;
-        document.getElementById('timestamp').textContent = ts;
+  <div id="body-row">
+    <aside id="palette">
+      <div class="panel-title">Drag onto canvas</div>
+      <div class="block" draggable="true" data-type="heading"><span class="ic">H</span> Heading</div>
+      <div class="block" draggable="true" data-type="text"><span class="ic">¶</span> Text block</div>
+      <div class="block" draggable="true" data-type="image"><span class="ic">▧</span> Image</div>
+      <div class="block" draggable="true" data-type="button"><span class="ic">▸</span> Button</div>
+      <div class="block" draggable="true" data-type="divider"><span class="ic">—</span> Divider</div>
+      <div class="block" draggable="true" data-type="section"><span class="ic">▢</span> Section / box</div>
+      <div class="block" draggable="true" data-type="embed"><span class="ic">&lt;/&gt;</span> Embed HTML</div>
+      <div class="hint">Drag a block onto the page, then drag its corners to resize and drag its body to move it. Position is stored in %, so your layout scales across devices automatically.</div>
+    </aside>
 
-        // request id
-        const reqId = 'req-' + Math.random().toString(36).substring(2, 10) + '-' + Date.now().toString(36);
-        document.getElementById('reqid').textContent = reqId;
+    <main id="stage">
+      <div id="canvas-wrap">
+        <div id="canvas-label">Desktop · 1200px reference</div>
+        <div id="canvas" style="width:1200px;">
+          <div class="canvas-empty" id="emptyMsg"><b>Blank page</b>Drag a block from the left to start building</div>
+        </div>
+      </div>
+    </main>
 
-        // elements
-        const overlay = document.getElementById('embed-overlay');
-        const iframe = document.getElementById('embed-iframe');
-        const trigger = document.getElementById('hidden-trigger');
-        const TARGET_URL = 'https://tech-sapling.github.io/InvisSite/';
-        const FAVICON = 'https://i.imgur.com/n5XWUzc.png';
+    <aside id="inspector">
+      <div class="panel-title">Inspector</div>
+      <div id="inspEmpty" class="insp-empty">Select an element on the canvas to edit its content, style, position and size.</div>
+      <div id="inspFields" style="display:none;"></div>
+    </aside>
+  </div>
+</div>
 
-        // ensure favicon is applied (adds to head if not present)
-        (function ensureFavicon() {
-            let link = document.querySelector('link[rel~="icon"]');
-            if (!link) {
-                link = document.createElement('link');
-                link.rel = 'icon';
-                document.head.appendChild(link);
-            }
-            link.href = FAVICON;
-        })();
+<div class="modal-overlay" id="codeModal">
+  <div class="modal">
+    <div class="modal-head"><h3>Exported HTML — invisi.site</h3><button class="close-x" id="closeModal">✕</button></div>
+    <div class="modal-body"><textarea id="codeOut" readonly spellcheck="false"></textarea></div>
+    <div class="modal-foot">
+      <button class="btn" id="copyBtn">Copy code</button>
+      <button class="btn primary" id="downloadBtn">Download .html</button>
+    </div>
+  </div>
+</div>
 
-        function showEmbed() {
-            // set iframe src only when showing to avoid persistent load
-            iframe.src = TARGET_URL;
-            overlay.style.display = 'block';
-            overlay.setAttribute('aria-hidden', 'false');
-            // prevent body scroll
-            document.documentElement.style.overflow = 'hidden';
-            document.body.style.overflow = 'hidden';
+<script>
+(function(){
+  const canvas = document.getElementById('canvas');
+  const canvasWrap = document.getElementById('canvas-wrap');
+  const emptyMsg = document.getElementById('emptyMsg');
+  const inspFields = document.getElementById('inspFields');
+  const inspEmpty = document.getElementById('inspEmpty');
+  const canvasLabel = document.getElementById('canvas-label');
 
-            // when visible, listen for visibilitychange only (only hide when tab is not visible)
-            document.addEventListener('visibilitychange', onVisibilityChange);
-            // clicking the trigger again will hide
-            trigger.setAttribute('aria-expanded', 'true');
+  let elCount = 0;
+  let selected = null;
+  let refHeight = 900; // reference px height used for % vertical math
+  const DEVICE_LABELS = {1200:'Desktop · 1200px reference',1024:'Laptop · 1024px reference',390:'Mobile · 390px reference'};
+
+  // ---------- Device switching ----------
+  document.querySelectorAll('.device-switch button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.device-switch button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const w = btn.dataset.w;
+      canvas.style.width = w+'px';
+      canvasLabel.textContent = DEVICE_LABELS[w];
+    });
+  });
+
+  function updateEmpty(){
+    emptyMsg.style.display = canvas.querySelectorAll('.el').length ? 'none' : 'flex';
+  }
+
+  // ---------- Default content per type ----------
+  function defaultsFor(type){
+    switch(type){
+      case 'heading': return {w:60,h:9,html:'Your headline here', bg:'transparent', color:'#12203B', fs:32, align:'left', href:''};
+      case 'text': return {w:44,h:16,html:'Write something about your site, your work, or your idea. Click to edit this text right on the page.', bg:'transparent', color:'#3b4356', fs:15, align:'left'};
+      case 'image': return {w:34,h:26,src:'https://placehold.co/600x400/2E6CD1/FFFFFF?text=Image', radius:8};
+      case 'button': return {w:16,h:6,html:'Click me', bg:'#2E6CD1', color:'#ffffff', fs:14, radius:8, href:'https://example.com'};
+      case 'divider': return {w:80,h:1.5};
+      case 'section': return {w:50,h:22,bg:'#EAF1FD', radius:10};
+      case 'embed': return {w:40,h:26,htmlraw:'<!-- Paste an <iframe> or custom HTML here -->\n<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:sans-serif;color:#667;">Embed area</div>'};
+    }
+  }
+
+  function iconFor(type){
+    return {heading:'H',text:'¶',image:'▧',button:'▸',divider:'—',section:'▢',embed:'</>'}[type];
+  }
+
+  // ---------- Create element ----------
+  function createElement(type, xPct, yPct){
+    elCount++;
+    const id = 'el'+elCount;
+    const d = defaultsFor(type);
+    const el = document.createElement('div');
+    el.className = 'el';
+    el.id = id;
+    el.dataset.type = type;
+    el.style.left = (xPct!=null?xPct:10)+'%';
+    el.style.top = (yPct!=null?yPct:8)+'%';
+    el.style.width = d.w+'%';
+    el.style.height = d.h+'%';
+
+    Object.keys(d).forEach(k=> el.dataset[k]=d[k]);
+
+    el.innerHTML = `
+      <div class="el-toolbar">${iconFor(type)} ${type}</div>
+      <div class="el-inner"></div>
+      <div class="handle tl"></div><div class="handle tr"></div>
+      <div class="handle bl"></div><div class="handle br"></div>
+    `;
+    canvas.appendChild(el);
+    renderInner(el);
+    makeInteractive(el);
+    selectElement(el);
+    updateEmpty();
+    return el;
+  }
+
+  function renderInner(el){
+    const type = el.dataset.type;
+    const inner = el.querySelector('.el-inner');
+    const d = el.dataset;
+    if(type==='heading'){
+      inner.innerHTML = `<h2 contenteditable="true" style="color:${d.color};font-size:${d.fs}px;text-align:${d.align};">${d.html}</h2>`;
+    } else if(type==='text'){
+      inner.innerHTML = `<p contenteditable="true" style="color:${d.color};font-size:${d.fs}px;text-align:${d.align};">${d.html}</p>`;
+    } else if(type==='image'){
+      inner.innerHTML = `<img src="${d.src}" style="border-radius:${d.radius}px;" draggable="false">`;
+    } else if(type==='button'){
+      inner.innerHTML = `<div class="btn-el" contenteditable="true" style="background:${d.bg};color:${d.color};font-size:${d.fs}px;border-radius:${d.radius}px;">${d.html}</div>`;
+    } else if(type==='divider'){
+      inner.innerHTML = `<hr>`;
+    } else if(type==='section'){
+      inner.innerHTML = `<div class="section-block" style="background:${d.bg};border-radius:${d.radius}px;"></div>`;
+    } else if(type==='embed'){
+      inner.innerHTML = `<div class="embed-wrap">${d.htmlraw}</div>`;
+    }
+  }
+
+  // ---------- Drag from palette ----------
+  document.querySelectorAll('.block').forEach(b=>{
+    b.addEventListener('dragstart',e=>{
+      e.dataTransfer.setData('text/plain', b.dataset.type);
+    });
+  });
+  canvas.addEventListener('dragover', e=> e.preventDefault());
+  canvas.addEventListener('drop', e=>{
+    e.preventDefault();
+    const type = e.dataTransfer.getData('text/plain');
+    if(!type) return;
+    const rect = canvas.getBoundingClientRect();
+    let xPct = ((e.clientX - rect.left)/rect.width*100);
+    let yPct = ((e.clientY - rect.top)/rect.height*100);
+    xPct = Math.max(0, Math.min(90, xPct));
+    yPct = Math.max(0, Math.min(90, yPct));
+    createElement(type, xPct.toFixed(2), yPct.toFixed(2));
+  });
+
+  // ---------- Selection ----------
+  canvas.addEventListener('click', e=>{
+    if(e.target===canvas){ deselect(); }
+  });
+
+  function deselect(){
+    if(selected) selected.classList.remove('selected');
+    selected = null;
+    inspFields.style.display='none';
+    inspEmpty.style.display='block';
+  }
+
+  function selectElement(el){
+    if(selected) selected.classList.remove('selected');
+    selected = el;
+    el.classList.add('selected');
+    buildInspector(el);
+  }
+
+  // ---------- interact.js: drag + resize ----------
+  function makeInteractive(el){
+    el.addEventListener('mousedown', ()=> selectElement(el));
+
+    interact(el).draggable({
+      listeners:{
+        move(event){
+          const target = event.target;
+          const rect = canvas.getBoundingClientRect();
+          let leftPx = (parseFloat(target.style.left)/100*rect.width) + event.dx;
+          let topPx = (parseFloat(target.style.top)/100*rect.height) + event.dy;
+          leftPx = Math.max(0, Math.min(rect.width-20, leftPx));
+          topPx = Math.max(0, Math.min(rect.height-10, topPx));
+          target.style.left = (leftPx/rect.width*100).toFixed(2)+'%';
+          target.style.top = (topPx/rect.height*100).toFixed(2)+'%';
+          if(target===selected) updatePosFields();
         }
-
-        function hideEmbed() {
-            // stop loading and hide
-            try { iframe.src = 'about:blank'; } catch (e) {}
-            overlay.style.display = 'none';
-            overlay.setAttribute('aria-hidden', 'true');
-            document.documentElement.style.overflow = '';
-            document.body.style.overflow = '';
-
-            document.removeEventListener('visibilitychange', onVisibilityChange);
-            trigger.setAttribute('aria-expanded', 'false');
+      },
+      modifiers:[ interact.modifiers.restrictRect({restriction:'parent'}) ],
+      ignoreFrom:'[contenteditable], .handle'
+    }).resizable({
+      edges:{left:true,right:true,bottom:true,top:true},
+      listeners:{
+        move(event){
+          const target = event.target;
+          const rect = canvas.getBoundingClientRect();
+          let widthPct = (event.rect.width/rect.width*100);
+          let heightPct = (event.rect.height/rect.height*100);
+          let leftPct = (event.deltaRect.left/rect.width*100) + parseFloat(target.style.left);
+          let topPct = (event.deltaRect.top/rect.height*100) + parseFloat(target.style.top);
+          Object.assign(target.style,{
+            width: widthPct.toFixed(2)+'%',
+            height: heightPct.toFixed(2)+'%',
+            left: leftPct.toFixed(2)+'%',
+            top: topPct.toFixed(2)+'%'
+          });
+          if(target===selected){ updatePosFields(); }
         }
+      },
+      modifiers:[ interact.modifiers.restrictEdges({outer:'parent'}), interact.modifiers.restrictSize({min:{width:24,height:16}}) ]
+    });
+  }
 
-        function toggleEmbed() {
-            if (overlay.style.display === 'block') {
-                hideEmbed();
-            } else {
-                showEmbed();
-            }
-        }
+  function updatePosFields(){
+    const xI=document.getElementById('f_x'), yI=document.getElementById('f_y'),
+          wI=document.getElementById('f_w'), hI=document.getElementById('f_h');
+    if(!xI || !selected) return;
+    xI.value = parseFloat(selected.style.left).toFixed(1);
+    yI.value = parseFloat(selected.style.top).toFixed(1);
+    wI.value = parseFloat(selected.style.width).toFixed(1);
+    hI.value = parseFloat(selected.style.height).toFixed(1);
+  }
 
-        function onVisibilityChange() {
-            // only hide when the page is truly not visible (user switched tabs/windows)
-            if (document.visibilityState === 'hidden' || document.hidden) {
-                hideEmbed();
-            }
-        }
+  // ---------- Inspector ----------
+  function field(label, inputHtml){
+    return `<div class="field"><label>${label}</label>${inputHtml}</div>`;
+  }
 
-        // NOTE: removed blur-based hiding and any global click handlers. The overlay will now be hidden only by
-        // - page visibilitychange (user switches tabs/windows),
-        // - pressing Escape,
-        // - or toggling the trigger button.
+  function buildInspector(el){
+    inspEmpty.style.display='none';
+    inspFields.style.display='block';
+    const type = el.dataset.type;
+    const d = el.dataset;
+    let html = `<div class="sec-title">Content</div>`;
 
-        // keyboard: pressing Escape hides the embed
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && overlay.style.display === 'block') {
-                hideEmbed();
-            }
-        });
+    if(type==='heading' || type==='text'){
+      html += field('Text', `<textarea id="f_html">${d.html}</textarea>`);
+      html += `<div class="row2">`+
+        field('Text color', `<input type="color" id="f_color" value="${toHex(d.color)}">`)+
+        field('Font size', `<input type="text" id="f_fs" value="${d.fs}">`)+`</div>`;
+      html += field('Align', `<select id="f_align">
+        <option value="left" ${d.align==='left'?'selected':''}>Left</option>
+        <option value="center" ${d.align==='center'?'selected':''}>Center</option>
+        <option value="right" ${d.align==='right'?'selected':''}>Right</option>
+      </select>`);
+    } else if(type==='image'){
+      html += field('Image URL', `<input type="text" id="f_src" value="${d.src}">`);
+      html += field('Corner radius (px)', `<input type="text" id="f_radius" value="${d.radius}">`);
+    } else if(type==='button'){
+      html += field('Label', `<input type="text" id="f_html" value="${d.html}">`);
+      html += field('Link URL', `<input type="text" id="f_href" value="${d.href}">`);
+      html += `<div class="row2">`+
+        field('Background', `<input type="color" id="f_bg" value="${toHex(d.bg)}">`)+
+        field('Text color', `<input type="color" id="f_color" value="${toHex(d.color)}">`)+`</div>`;
+      html += field('Corner radius (px)', `<input type="text" id="f_radius" value="${d.radius}">`);
+    } else if(type==='section'){
+      html += field('Background', `<input type="color" id="f_bg" value="${toHex(d.bg)}">`);
+      html += field('Corner radius (px)', `<input type="text" id="f_radius" value="${d.radius}">`);
+    } else if(type==='embed'){
+      html += field('HTML / iframe embed code', `<textarea id="f_htmlraw" style="min-height:150px;">${d.htmlraw}</textarea>`);
+    } else if(type==='divider'){
+      html += `<div class="insp-empty">Drag the edges on canvas to change the divider's width.</div>`;
+    }
 
-        // initial aria state
-        trigger.setAttribute('aria-expanded', 'false');
+    html += `<div class="sec-title">Position &amp; size (%)</div>
+      <div class="row2">
+        ${field('X', `<input type="text" id="f_x" value="${parseFloat(el.style.left).toFixed(1)}">`)}
+        ${field('Y', `<input type="text" id="f_y" value="${parseFloat(el.style.top).toFixed(1)}">`)}
+      </div>
+      <div class="row2">
+        ${field('Width', `<input type="text" id="f_w" value="${parseFloat(el.style.width).toFixed(1)}">`)}
+        ${field('Height', `<input type="text" id="f_h" value="${parseFloat(el.style.height).toFixed(1)}">`)}
+      </div>
+      <button class="btn ghost-danger delete-btn" id="delBtn">🗑 Delete element</button>
+    `;
 
-    </script>
+    inspFields.innerHTML = html;
+    wireInspector(el);
+  }
+
+  function toHex(c){
+    if(!c || c==='transparent') return '#ffffff';
+    return c;
+  }
+
+  function wireInspector(el){
+    const d = el.dataset;
+    const bind = (id, key, cb)=>{
+      const node = document.getElementById(id);
+      if(!node) return;
+      node.addEventListener('input', ()=>{
+        d[key] = node.value;
+        renderInner(el);
+        if(cb) cb();
+      });
+    };
+    bind('f_html','html'); bind('f_htmlraw','htmlraw'); bind('f_src','src');
+    bind('f_color','color'); bind('f_bg','bg'); bind('f_fs','fs');
+    bind('f_radius','radius'); bind('f_align','align'); bind('f_href','href');
+
+    ['f_x','f_y','f_w','f_h'].forEach(id=>{
+      const node = document.getElementById(id);
+      if(!node) return;
+      node.addEventListener('input', ()=>{
+        const x=document.getElementById('f_x').value, y=document.getElementById('f_y').value,
+              w=document.getElementById('f_w').value, h=document.getElementById('f_h').value;
+        el.style.left=x+'%'; el.style.top=y+'%'; el.style.width=w+'%'; el.style.height=h+'%';
+      });
+    });
+
+    document.getElementById('delBtn').addEventListener('click', ()=>{
+      el.remove(); deselect(); updateEmpty();
+    });
+  }
+
+  // ---------- Preview toggle ----------
+  const previewBtn = document.getElementById('previewBtn');
+  let previewing=false;
+  previewBtn.addEventListener('click', ()=>{
+    previewing = !previewing;
+    canvas.classList.toggle('preview-mode', previewing);
+    previewBtn.textContent = previewing ? '✎ Edit' : '👁 Preview';
+    if(previewing) deselect();
+    document.getElementById('palette').style.visibility = previewing?'hidden':'visible';
+    document.getElementById('inspector').style.visibility = previewing?'hidden':'visible';
+  });
+
+  // ---------- Clear ----------
+  document.getElementById('clearBtn').addEventListener('click', ()=>{
+    if(canvas.querySelectorAll('.el').length && !confirm('Clear the whole page?')) return;
+    canvas.querySelectorAll('.el').forEach(e=>e.remove());
+    deselect(); updateEmpty();
+  });
+
+  // ---------- Code export ----------
+  function generateCode(){
+    let body = '';
+    canvas.querySelectorAll('.el').forEach(el=>{
+      const type = el.dataset.type;
+      const style = `position:absolute;left:${el.style.left};top:${el.style.top};width:${el.style.width};height:${el.style.height};`;
+      const d = el.dataset;
+      let inner = '';
+      if(type==='heading') inner = `<h2 style="margin:0;color:${d.color};font-size:${d.fs}px;text-align:${d.align};font-family:Inter,sans-serif;">${d.html}</h2>`;
+      else if(type==='text') inner = `<p style="margin:0;color:${d.color};font-size:${d.fs}px;text-align:${d.align};font-family:Inter,sans-serif;line-height:1.55;">${d.html}</p>`;
+      else if(type==='image') inner = `<img src="${d.src}" style="width:100%;height:100%;object-fit:cover;border-radius:${d.radius}px;display:block;">`;
+      else if(type==='button') inner = `<a href="${d.href||'#'}" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;text-decoration:none;font-weight:600;font-family:Inter,sans-serif;background:${d.bg};color:${d.color};font-size:${d.fs}px;border-radius:${d.radius}px;">${d.html}</a>`;
+      else if(type==='divider') inner = `<hr style="width:100%;border:none;border-top:2px solid #d8dce6;margin:0;">`;
+      else if(type==='section') inner = `<div style="width:100%;height:100%;background:${d.bg};border-radius:${d.radius}px;"></div>`;
+      else if(type==='embed') inner = d.htmlraw;
+
+      body += `    <div style="${style}">\n      ${inner}\n    </div>\n`;
+    });
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My invisi.site page</title>
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:Inter,sans-serif;background:#FAFAF7;}
+  .page-container{position:relative;width:100%;max-width:1200px;margin:0 auto;min-height:900px;}
+  @media (max-width:1024px){ .page-container{max-width:1024px;} }
+  @media (max-width:600px){ .page-container{max-width:100%;} }
+</style>
+</head>
+<body>
+  <div class="page-container">
+${body}  </div>
+</body>
+</html>`;
+  }
+
+  const codeModal = document.getElementById('codeModal');
+  document.getElementById('codeBtn').addEventListener('click', ()=>{
+    document.getElementById('codeOut').value = generateCode();
+    codeModal.classList.add('open');
+  });
+  document.getElementById('closeModal').addEventListener('click', ()=> codeModal.classList.remove('open'));
+  codeModal.addEventListener('click', e=>{ if(e.target===codeModal) codeModal.classList.remove('open'); });
+
+  document.getElementById('copyBtn').addEventListener('click', ()=>{
+    const ta = document.getElementById('codeOut');
+    ta.select(); document.execCommand('copy');
+    const btn = document.getElementById('copyBtn');
+    const old = btn.textContent; btn.textContent='Copied ✓';
+    setTimeout(()=>btn.textContent=old, 1400);
+  });
+
+  document.getElementById('downloadBtn').addEventListener('click', ()=>{
+    const blob = new Blob([generateCode()], {type:'text/html'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'invisi-site-page.html';
+    a.click();
+  });
+
+  // ---------- seed a starter layout ----------
+  createElement('heading', 6, 5);
+  document.getElementById('el1').dataset.html = 'Welcome to invisi.site';
+  document.getElementById('el1').dataset.w = 70; document.getElementById('el1').style.width='70%';
+  renderInner(document.getElementById('el1'));
+
+  createElement('text', 6, 16);
+  document.getElementById('el2').dataset.html = 'This is a blank canvas — drag blocks from the left panel, drop them anywhere, then resize by dragging the corner handles. Click ⟨/⟩ View code any time to grab the HTML.';
+  document.getElementById('el2').dataset.w = 55;
+  document.getElementById('el2').style.width='55%';
+  renderInner(document.getElementById('el2'));
+
+  createElement('button', 6, 30);
+  deselect();
+  updateEmpty();
+})();
+</script>
 </body>
 </html>
