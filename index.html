@@ -92,10 +92,15 @@
 
   .canvas-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--text-3);font-size:12.5px;text-align:center;pointer-events:none;}
   .canvas-empty b{color:var(--text);font-size:15px;font-weight:500;}
+  .center-guide{position:absolute;background:#F9AB00;z-index:40;display:none;pointer-events:none;}
+  .center-guide.v{top:0;bottom:0;left:50%;width:1px;margin-left:-0.5px;}
+  .center-guide.h{left:0;right:0;top:50%;height:1px;margin-top:-0.5px;}
+  .center-guide.show{display:block;}
 
   .el{position:absolute;outline:1.5px dashed transparent;cursor:move;color:#1c2333;user-select:none;box-sizing:border-box;}
   .el:hover{outline-color:rgba(26,115,232,0.45);}
   .el.selected{outline:1.5px solid var(--blue);}
+  .el.multi-selected{outline:1.5px solid var(--amber);}
   .el .el-inner{width:100%;height:100%;overflow:auto;}
   .el [contenteditable=true]{user-select:text;cursor:text;}
   .el .handle{position:absolute;width:11px;height:11px;background:var(--blue);border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,0.15);display:none;z-index:5;}
@@ -212,6 +217,8 @@
         <div id="canvas-label">Desktop · 1200×720</div>
         <div id="canvas" style="width:1200px;height:720px;">
           <div class="canvas-empty" id="emptyMsg"><b>Blank page</b>Drag a block from the panel on the right to start building</div>
+          <div class="center-guide v" id="centerGuideV"></div>
+          <div class="center-guide h" id="centerGuideH"></div>
         </div>
       </div>
     </main>
@@ -264,6 +271,15 @@
       <div class="field"><label>Site title</label><input type="text" id="siteTitleInput" value="My Site" placeholder="Site title"></div>
       <div class="field"><label>Navigation</label><br><button class="toggle-chip active" id="navbarToggle">▭ Top bar on</button></div>
 
+      <div class="sec-title">Page width</div>
+      <div class="field"><label>On real screens</label><select id="pageWidthInput">
+        <option value="none">Full width — fills the browser, no side gaps</option>
+        <option value="1200">Boxed — max 1200px, centered</option>
+        <option value="1400">Boxed — max 1400px, centered</option>
+        <option value="1600">Boxed — max 1600px, centered</option>
+      </select></div>
+      <p style="font-size:12px;color:var(--text-2);">"Full width" is the fix for elements that looked full-width in the editor but left empty space on the sides of the real site — it lets your percentage-based layout fill whatever screen it's on. Pick a boxed width instead if you want a traditional centered column.</p>
+
       <div class="sec-title">Top bar look</div>
       <div class="field"><label>Logo image URL (optional)</label><input type="text" id="navLogoInput" placeholder="https://example.com/logo.png"></div>
       <div class="row2">
@@ -296,6 +312,7 @@
 
   let elCount = 0;
   let selected = null;
+  let selectedEls = new Set();
   let gridSize = 20;
   let snapEnabled = true;
   let previewing = false;
@@ -322,6 +339,7 @@
   let navLogo = '';
   let navFont = 'Roboto';
   let navTransparentUntilScroll = false;
+  let pageWidth = 'none';
 
   siteTitleInput.addEventListener('input', ()=>{ siteTitle = siteTitleInput.value || 'My Site'; renderSitebarPreview(); });
   document.getElementById('navbarToggle').addEventListener('click', e=>{
@@ -330,6 +348,8 @@
     e.target.textContent = navbarEnabled ? '▭ Top bar on' : '▭ Top bar off';
     renderSitebarPreview();
   });
+  const pageWidthInput = document.getElementById('pageWidthInput');
+  pageWidthInput.addEventListener('change', ()=>{ pageWidth = pageWidthInput.value; });
   const navbarBgInput = document.getElementById('navbarBgInput');
   const navbarTextInput = document.getElementById('navbarTextInput');
   const navLogoInput = document.getElementById('navLogoInput');
@@ -418,6 +438,7 @@
       if(delX) delX.addEventListener('click', e=>{
         e.stopPropagation();
         if(!confirm(`Delete "${p.name}"?`)) return;
+        pushUndo();
         delete pages[id];
         pageOrder = pageOrder.filter(x=>x!==id);
         if(currentPageId===id) loadPage(pageOrder[0]); else { renderPageTabs(); renderSitebarPreview(); }
@@ -460,6 +481,52 @@
     pageHeightInput.value = parseInt(p.height,10);
     if(previewing) updatePreviewBadge();
   }
+
+  // ---------- undo / redo ----------
+  let undoStack = [];
+  let redoStack = [];
+  let isRestoring = false;
+  function currentSnapshot(){
+    serializeCurrentPage();
+    return JSON.stringify({pages, pageOrder, currentPageId});
+  }
+  function pushUndo(){
+    if(isRestoring) return;
+    undoStack.push(currentSnapshot());
+    if(undoStack.length>60) undoStack.shift();
+    redoStack = [];
+  }
+  function restoreSnapshot(snapStr){
+    isRestoring = true;
+    const data = JSON.parse(snapStr);
+    pages = data.pages; pageOrder = data.pageOrder;
+    currentPageId = null;
+    loadPage(data.currentPageId && pages[data.currentPageId] ? data.currentPageId : pageOrder[0]);
+    isRestoring = false;
+  }
+  function undo(){
+    if(undoStack.length===0) return;
+    const prev = undoStack.pop();
+    redoStack.push(currentSnapshot());
+    restoreSnapshot(prev);
+  }
+  function redo(){
+    if(redoStack.length===0) return;
+    const next = redoStack.pop();
+    undoStack.push(currentSnapshot());
+    restoreSnapshot(next);
+  }
+  document.addEventListener('keydown', e=>{
+    if(!(e.ctrlKey || e.metaKey)) return;
+    const k = e.key.toLowerCase();
+    if(k!=='z' && k!=='y') return;
+    const activeEl = document.activeElement;
+    const isTyping = activeEl && (activeEl.isContentEditable || activeEl.tagName==='INPUT' || activeEl.tagName==='TEXTAREA');
+    if(isTyping) return; // let native undo run inside text fields instead of hijacking it
+    e.preventDefault();
+    if(k==='y' || (k==='z' && e.shiftKey)) redo();
+    else if(k==='z') undo();
+  });
 
   function applyDeviceHeight(){
     const p = pages[currentPageId];
@@ -533,10 +600,11 @@
   }
 
   function createElement(type, xPct, yPct, sizeOverride){
+    pushUndo();
     const d = defaultsFor(type);
     const w = (sizeOverride && sizeOverride.w) || d.w, h = (sizeOverride && sizeOverride.h) || d.h;
     const el = buildElementNode(type, {left:(xPct!=null?xPct:10)+'%', top:(yPct!=null?yPct:8)+'%', width:w+'%', height:h+'%'}, (()=>{const c={...d}; delete c.w; delete c.h; return c;})());
-    selectElement(el);
+    selectElementSingle(el);
     updateEmpty();
     return el;
   }
@@ -568,6 +636,14 @@
     const dir = dirMap[d.fadedir] || 'to right';
     const grad = `linear-gradient(${dir}, black ${stop}%, transparent 100%)`;
     return `-webkit-mask-image:${grad};mask-image:${grad};`;
+  }
+  function escapeAttr(str){
+    return String(str==null?'':str).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  }
+  function embedIframeHTML(d, interactive){
+    // Isolated in an iframe so any <style>/<script> the pasted snippet contains
+    // can never leak out and reposition the rest of the page.
+    return `<iframe srcdoc="${escapeAttr(d.htmlraw)}" style="width:100%;height:100%;border:0;display:block;pointer-events:${interactive?'auto':'none'};" sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation allow-popups-to-escape-sandbox" loading="lazy" title="Embedded content"></iframe>`;
   }
 
   function applyWrapperAppearance(el){
@@ -604,7 +680,7 @@
     } else if(type==='section'){
       inner.innerHTML = `<div class="section-block" style="background:${d.bg};border-radius:${radiusCSS(d)};"></div>`;
     } else if(type==='embed'){
-      inner.innerHTML = `<div class="embed-wrap" style="border-radius:${radiusCSS(d)};">${d.htmlraw}</div>`;
+      inner.innerHTML = `<div class="embed-wrap" style="border-radius:${radiusCSS(d)};">${embedIframeHTML(d, previewing)}</div>`;
     }
     applyWrapperAppearance(el);
   }
@@ -649,23 +725,79 @@
     }
   }
 
-  function deselect(){
-    if(selected) selected.classList.remove('selected');
-    selected = null; inspFields.style.display='none'; inspEmpty.style.display='block';
+  function syncSelectionClasses(){
+    const multi = selectedEls.size>1;
+    selectedEls.forEach(el=>{
+      el.classList.toggle('selected', !multi);
+      el.classList.toggle('multi-selected', multi);
+    });
   }
-  function selectElement(el){
+
+  function deselect(){
+    selectedEls.forEach(el=> el.classList.remove('selected','multi-selected'));
+    selectedEls.clear();
+    selected = null;
+    inspFields.style.display='none'; inspEmpty.style.display='block';
+  }
+
+  function selectElementSingle(el){
     if(previewing) return;
-    if(selected) selected.classList.remove('selected');
-    selected = el; el.classList.add('selected');
+    selectedEls.forEach(x=>x.classList.remove('selected','multi-selected'));
+    selectedEls.clear();
+    selectedEls.add(el);
+    selected = el;
+    syncSelectionClasses();
     buildInspector(el);
   }
+
+  function toggleSelectElement(el){
+    if(previewing) return;
+    if(selectedEls.has(el)){
+      selectedEls.delete(el);
+      el.classList.remove('selected','multi-selected');
+    } else {
+      selectedEls.add(el);
+    }
+    syncSelectionClasses();
+    updateInspectorForSelection();
+  }
+
+  function updateInspectorForSelection(){
+    if(selectedEls.size===0){ deselect(); return; }
+    if(selectedEls.size===1){ selected = Array.from(selectedEls)[0]; buildInspector(selected); return; }
+    selected = null;
+    inspEmpty.style.display='none'; inspFields.style.display='block';
+    inspFields.innerHTML = `<div class="insp-empty" style="margin-bottom:12px;">${selectedEls.size} elements selected. Shift+click to add or remove one, drag any of them to move the group together.</div><button class="btn ghost-danger delete-btn" id="delMultiBtn">🗑 Delete selected</button>`;
+    document.getElementById('delMultiBtn').addEventListener('click', ()=>{
+      pushUndo();
+      selectedEls.forEach(x=>x.remove());
+      deselect(); updateEmpty();
+    });
+  }
+
+  document.addEventListener('keydown', e=>{
+    if(previewing || selectedEls.size===0) return;
+    if(e.key!=='Delete' && e.key!=='Backspace') return;
+    const activeEl = document.activeElement;
+    const isTyping = activeEl && (activeEl.isContentEditable || activeEl.tagName==='INPUT' || activeEl.tagName==='TEXTAREA');
+    if(isTyping) return;
+    e.preventDefault();
+    pushUndo();
+    selectedEls.forEach(x=>x.remove());
+    deselect(); updateEmpty();
+  });
 
   // ---------- drag + resize (dependency-free, pointer events) ----------
   function makeInteractive(el){
     el.addEventListener('pointerdown', e=>{
       if(previewing) return;
       if(e.target.closest('.handle')) return;
-      if(e.target.closest('[contenteditable="true"]')) { selectElement(el); return; }
+      if(e.target.closest('[contenteditable="true"]')) { selectElementSingle(el); return; }
+      if(e.shiftKey){
+        e.preventDefault(); e.stopPropagation();
+        toggleSelectElement(el);
+        return;
+      }
       startDrag(e, el);
     });
     el.querySelectorAll('.handle').forEach(h=>{
@@ -677,32 +809,64 @@
     });
   }
 
+  const centerGuideV = document.getElementById('centerGuideV');
+  const centerGuideH = document.getElementById('centerGuideH');
+  const CENTER_SNAP_PX = 10;
+  function hideCenterGuides(){ centerGuideV.classList.remove('show'); centerGuideH.classList.remove('show'); }
+
   function startDrag(e, el){
     e.preventDefault();
-    selectElement(el);
+    pushUndo();
+    const isGroupDrag = selectedEls.has(el) && selectedEls.size>1;
+    if(!isGroupDrag) selectElementSingle(el);
     const rect = canvas.getBoundingClientRect();
+    const groupEls = isGroupDrag ? Array.from(selectedEls) : [el];
     const startX = e.clientX, startY = e.clientY;
-    const startLeft = parseFloat(el.style.left), startTop = parseFloat(el.style.top);
+    const starts = groupEls.map(gEl=>({
+      el:gEl,
+      left:parseFloat(gEl.style.left), top:parseFloat(gEl.style.top),
+      w:parseFloat(gEl.style.width), h:parseFloat(gEl.style.height)
+    }));
 
     function onMove(ev){
       const dx = ev.clientX - startX, dy = ev.clientY - startY;
-      let leftPx = (startLeft/100*rect.width) + dx;
-      let topPx = (startTop/100*rect.height) + dy;
-      if(snapEnabled){ leftPx = Math.round(leftPx/gridSize)*gridSize; topPx = Math.round(topPx/gridSize)*gridSize; }
-      leftPx = Math.max(0, Math.min(rect.width-20, leftPx));
-      topPx = Math.max(0, Math.min(rect.height-10, topPx));
-      el.style.left = (leftPx/rect.width*100).toFixed(2)+'%';
-      el.style.top = (topPx/rect.height*100).toFixed(2)+'%';
-      if(el===selected) updatePosFields();
+      starts.forEach(s=>{
+        let leftPx = (s.left/100*rect.width) + dx;
+        let topPx = (s.top/100*rect.height) + dy;
+        if(snapEnabled){ leftPx = Math.round(leftPx/gridSize)*gridSize; topPx = Math.round(topPx/gridSize)*gridSize; }
+        leftPx = Math.max(0, Math.min(rect.width-20, leftPx));
+        topPx = Math.max(0, Math.min(rect.height-10, topPx));
+
+        if(!isGroupDrag && snapEnabled){
+          const wPx = s.w/100*rect.width, hPx = s.h/100*rect.height;
+          const centerX = leftPx + wPx/2, centerY = topPx + hPx/2;
+          const canvasCenterX = rect.width/2, canvasCenterY = rect.height/2;
+          const snapX = Math.abs(centerX-canvasCenterX) < CENTER_SNAP_PX;
+          const snapY = Math.abs(centerY-canvasCenterY) < CENTER_SNAP_PX;
+          if(snapX) leftPx = canvasCenterX - wPx/2;
+          if(snapY) topPx = canvasCenterY - hPx/2;
+          centerGuideV.classList.toggle('show', snapX);
+          centerGuideH.classList.toggle('show', snapY);
+        }
+
+        s.el.style.left = (leftPx/rect.width*100).toFixed(2)+'%';
+        s.el.style.top = (topPx/rect.height*100).toFixed(2)+'%';
+      });
+      if(!isGroupDrag) updatePosFields();
     }
-    function onUp(){ document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', onUp); }
+    function onUp(){
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      hideCenterGuides();
+    }
     document.addEventListener('pointermove', onMove);
     document.addEventListener('pointerup', onUp);
   }
 
   function startResize(e, el, corner){
     e.preventDefault();
-    selectElement(el);
+    pushUndo();
+    selectElementSingle(el);
     const rect = canvas.getBoundingClientRect();
     const startX = e.clientX, startY = e.clientY;
     const startLeft = parseFloat(el.style.left), startTop = parseFloat(el.style.top);
@@ -833,32 +997,39 @@
 
   function wireInspector(el){
     const d = el.dataset;
-    const bindInput = (id,key)=>{ const n=document.getElementById(id); if(!n) return; n.addEventListener('input', ()=>{ d[key]=n.value; renderInner(el); }); };
+    const bindInput = (id,key)=>{
+      const n=document.getElementById(id); if(!n) return;
+      n.addEventListener('focus', ()=> pushUndo());
+      n.addEventListener('input', ()=>{ d[key]=n.value; renderInner(el); });
+    };
     bindInput('f_html','html'); bindInput('f_htmlraw','htmlraw'); bindInput('f_src','src');
     bindInput('f_color','color'); bindInput('f_bg','bg'); bindInput('f_fs','fs'); bindInput('f_radius','radius');
     bindInput('f_href','href'); bindInput('f_border','border'); bindInput('f_bordercolor','bordercolor');
 
     const alignSel = document.getElementById('f_align');
-    if(alignSel) alignSel.addEventListener('change', ()=>{ d.align=alignSel.value; renderInner(el); });
+    if(alignSel) alignSel.addEventListener('change', ()=>{ pushUndo(); d.align=alignSel.value; renderInner(el); });
     const fontSel = document.getElementById('f_font');
-    if(fontSel) fontSel.addEventListener('change', ()=>{ d.font=fontSel.value; renderInner(el); });
+    if(fontSel) fontSel.addEventListener('change', ()=>{ pushUndo(); d.font=fontSel.value; renderInner(el); });
     const borderStyleSel = document.getElementById('f_borderstyle');
-    if(borderStyleSel) borderStyleSel.addEventListener('change', ()=>{ d.borderstyle=borderStyleSel.value; renderInner(el); });
+    if(borderStyleSel) borderStyleSel.addEventListener('change', ()=>{ pushUndo(); d.borderstyle=borderStyleSel.value; renderInner(el); });
     const strokeOnSel = document.getElementById('f_strokeon');
-    if(strokeOnSel) strokeOnSel.addEventListener('change', ()=>{ d.strokeon=strokeOnSel.value; renderInner(el); });
+    if(strokeOnSel) strokeOnSel.addEventListener('change', ()=>{ pushUndo(); d.strokeon=strokeOnSel.value; renderInner(el); });
     const fadeDirSel = document.getElementById('f_fadedir');
-    if(fadeDirSel) fadeDirSel.addEventListener('change', ()=>{ d.fadedir=fadeDirSel.value; renderInner(el); });
+    if(fadeDirSel) fadeDirSel.addEventListener('change', ()=>{ pushUndo(); d.fadedir=fadeDirSel.value; renderInner(el); });
     const fadeAmtR = document.getElementById('f_fadeamt');
+    if(fadeAmtR) fadeAmtR.addEventListener('focus', ()=> pushUndo());
     if(fadeAmtR) fadeAmtR.addEventListener('input', ()=>{ d.fadeamt=fadeAmtR.value; renderInner(el); buildInspector(el); });
     const animSel = document.getElementById('f_anim');
-    if(animSel) animSel.addEventListener('change', ()=>{ d.anim=animSel.value; });
+    if(animSel) animSel.addEventListener('change', ()=>{ pushUndo(); d.anim=animSel.value; });
     const transdurR = document.getElementById('f_transdur');
+    if(transdurR) transdurR.addEventListener('focus', ()=> pushUndo());
     if(transdurR) transdurR.addEventListener('input', ()=>{ d.transdur=transdurR.value; buildInspector(el); });
 
     ['rtl','rtr','rbl','rbr'].forEach(c=>{
       const btn = document.getElementById('f_'+c);
       if(!btn) return;
       btn.addEventListener('click', ()=>{
+        pushUndo();
         d[c] = (d[c]==='0') ? '1' : '0';
         btn.classList.toggle('active', d[c]!=='0');
         renderInner(el);
@@ -866,13 +1037,14 @@
     });
 
     const linkPageSel = document.getElementById('f_linkpage');
-    if(linkPageSel) linkPageSel.addEventListener('change', ()=>{ d.linkpage=linkPageSel.value; });
+    if(linkPageSel) linkPageSel.addEventListener('change', ()=>{ pushUndo(); d.linkpage=linkPageSel.value; });
     const linkTypeSel = document.getElementById('f_linktype');
-    if(linkTypeSel) linkTypeSel.addEventListener('change', ()=>{ d.linktype=linkTypeSel.value; if(d.linktype==='page' && !d.linkpage) d.linkpage=pageOrder.find(id=>id!==currentPageId)||currentPageId; buildInspector(el); });
+    if(linkTypeSel) linkTypeSel.addEventListener('change', ()=>{ pushUndo(); d.linktype=linkTypeSel.value; if(d.linktype==='page' && !d.linkpage) d.linkpage=pageOrder.find(id=>id!==currentPageId)||currentPageId; buildInspector(el); });
 
     ['f_x','f_y','f_w','f_h'].forEach(id=>{
       const n = document.getElementById(id);
       if(!n) return;
+      n.addEventListener('focus', ()=> pushUndo());
       n.addEventListener('input', ()=>{
         el.style.left = document.getElementById('f_x').value+'%';
         el.style.top = document.getElementById('f_y').value+'%';
@@ -881,7 +1053,7 @@
       });
     });
 
-    document.getElementById('delBtn').addEventListener('click', ()=>{ el.remove(); deselect(); updateEmpty(); });
+    document.getElementById('delBtn').addEventListener('click', ()=>{ pushUndo(); el.remove(); deselect(); updateEmpty(); });
   }
 
   // ---------- preview ----------
@@ -903,6 +1075,7 @@
 
   document.getElementById('clearBtn').addEventListener('click', ()=>{
     if(canvas.querySelectorAll('.el').length && !confirm('Clear this page?')) return;
+    pushUndo();
     canvas.querySelectorAll('.el').forEach(e=>e.remove());
     deselect(); updateEmpty();
   });
@@ -920,6 +1093,7 @@
     navbarBgInput.value = navbarBg; navbarTextInput.value = navbarText;
     navLogoInput.value = navLogo; navFontInput.value = navFont;
     navTransparentToggle.classList.toggle('active', navTransparentUntilScroll);
+    pageWidthInput.value = pageWidth;
     siteSettingsModal.classList.add('open');
   });
   document.getElementById('closeSiteSettingsModal').addEventListener('click', ()=> siteSettingsModal.classList.remove('open'));
@@ -949,7 +1123,7 @@
       }
       else if(type==='divider') inner = `<hr style="width:100%;border:none;border-top:2px solid ${d.color||'#DADCE0'};margin:0;">`;
       else if(type==='section') inner = `<div style="width:100%;height:100%;background:${d.bg};border-radius:${radiusCSS(d)};"></div>`;
-      else if(type==='embed') inner = d.htmlraw;
+      else if(type==='embed') inner = embedIframeHTML(d, true);
       body += `      <div style="${style}">\n        ${inner}\n      </div>\n`;
     });
     return body;
@@ -960,11 +1134,13 @@
     const slugMap = computeSlugs();
     const fontsUsed = new Set(['Roboto']);
     pageOrder.forEach(id=> pages[id].elements.forEach(e=>{ if(['heading','text','button'].includes(e.type) && e.dataset.font) fontsUsed.add(e.dataset.font); }));
+    if(navbarEnabled) fontsUsed.add(navFont);
     const fontFamilies = Array.from(fontsUsed).map(f=>`family=${encodeURIComponent(f)}:wght@400;600;700`).join('&');
 
+    const logoHtml = navLogo ? `<img src="${navLogo}" class="nav-logo">` : '';
     const navHtml = navbarEnabled ? `
-  <header class="site-navbar">
-    <div class="nav-title">${siteTitle}</div>
+  <header class="site-navbar${navTransparentUntilScroll?' nav-transparent':''}">
+    ${logoHtml}<div class="nav-title">${siteTitle}</div>
     <nav>${pageOrder.filter(id=>!pages[id].hidden).map(id=>`<a href="#" onclick="invisiGoTo('${slugMap[id]}');return false;">${pages[id].name}</a>`).join('')}</nav>
   </header>` : '';
 
@@ -973,6 +1149,23 @@
       return `  <section class="site-page${i===0?' active':''}" id="pg-${slugMap[id]}" style="min-height:${p.height}px;">
 ${elementsHTML(p.elements, slugMap)}  </section>`;
     }).join('\n');
+
+    const navPositionCSS = navTransparentUntilScroll
+      ? `.site-navbar{position:fixed;top:0;left:0;right:0;background:transparent;box-shadow:none;transition:background .25s ease,box-shadow .25s ease;}
+  .site-navbar.nav-scrolled{background:${navbarBg};box-shadow:0 1px 4px rgba(0,0,0,.15);}`
+      : `.site-navbar{position:sticky;top:0;background:${navbarBg};box-shadow:0 1px 4px rgba(0,0,0,.15);}`;
+    const scrollScript = navbarEnabled && navTransparentUntilScroll ? `
+window.addEventListener('scroll', function(){
+  var nav = document.querySelector('.site-navbar');
+  if(!nav) return;
+  if(window.scrollY > 40){ nav.classList.add('nav-scrolled'); } else { nav.classList.remove('nav-scrolled'); }
+});` : '';
+
+    const pageWidthCSS = pageWidth==='none'
+      ? `.site-page{width:100%;}`
+      : `.site-page{width:100%;max-width:${pageWidth}px;margin:0 auto;}
+  @media (max-width:1024px){ .site-page{max-width:1024px;} }
+  @media (max-width:600px){ .site-page{max-width:100%;} }`;
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -984,14 +1177,15 @@ ${elementsHTML(p.elements, slugMap)}  </section>`;
 <style>
   *{box-sizing:border-box;}
   body{margin:0;font-family:'Roboto',Arial,sans-serif;background:#FFFFFF;}
-  .site-navbar{display:flex;align-items:center;gap:18px;padding:14px 28px;color:${navbarText};background:${navbarBg};position:sticky;top:0;z-index:50;box-shadow:0 1px 4px rgba(0,0,0,.15);}
+  .site-navbar{display:flex;align-items:center;gap:18px;padding:14px 28px;color:${navbarText};font-family:'${navFont}',sans-serif;z-index:50;width:100%;}
+  ${navPositionCSS}
+  .site-navbar .nav-logo{height:28px;width:28px;object-fit:cover;border-radius:6px;flex-shrink:0;}
   .site-navbar .nav-title{font-weight:700;font-size:16px;margin-right:auto;}
   .site-navbar nav a{color:${navbarText};text-decoration:none;font-size:13px;font-weight:500;opacity:.92;padding:6px 10px;border-radius:6px;}
   .site-navbar nav a:hover{background:rgba(255,255,255,0.16);}
-  .site-page{position:relative;width:100%;max-width:1200px;margin:0 auto;display:none;}
+  .site-page{position:relative;display:none;}
+  ${pageWidthCSS}
   .site-page.active{display:block;animation:iv-fade .35s ease;}
-  @media (max-width:1024px){ .site-page{max-width:1024px;} }
-  @media (max-width:600px){ .site-page{max-width:100%;} }
   @keyframes iv-fade{from{opacity:0}to{opacity:1}}
   @keyframes iv-slide-up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
   @keyframes iv-slide-left{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
@@ -1010,6 +1204,7 @@ function invisiGoTo(slug){
   if(t) t.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
 }
+${scrollScript}
 <\/script>
 </body>
 </html>`;
@@ -1051,7 +1246,7 @@ function invisiGoTo(slug){
   // ---------- save / open project ----------
   function projectData(){
     serializeCurrentPage();
-    return {version:2, siteTitle, navbarEnabled, navbarBg, navbarText, pages, pageOrder, currentPageId};
+    return {version:4, siteTitle, navbarEnabled, navbarBg, navbarText, navLogo, navFont, navTransparentUntilScroll, pageWidth, pages, pageOrder, currentPageId};
   }
   document.getElementById('saveBtn').addEventListener('click', ()=>{
     const blob = new Blob([JSON.stringify(projectData(),null,2)], {type:'application/json'});
@@ -1072,6 +1267,10 @@ function invisiGoTo(slug){
         siteTitle = data.siteTitle || 'My Site'; siteTitleInput.value = siteTitle;
         navbarEnabled = data.navbarEnabled !== false;
         navbarBg = data.navbarBg || '#1A73E8'; navbarText = data.navbarText || '#FFFFFF';
+        navLogo = data.navLogo || ''; navFont = data.navFont || 'Roboto';
+        navTransparentUntilScroll = !!data.navTransparentUntilScroll;
+        pageWidth = data.pageWidth || 'none'; pageWidthInput.value = pageWidth;
+        ensureFontLoaded(navFont);
         const chip = document.getElementById('navbarToggle');
         chip.classList.toggle('active', navbarEnabled);
         chip.textContent = navbarEnabled ? '▭ Top bar on' : '▭ Top bar off';
