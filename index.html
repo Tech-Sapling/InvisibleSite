@@ -21,6 +21,9 @@
   button,input,select,textarea{font-family:var(--sans);}
   #app{display:flex;flex-direction:column;height:100vh;}
 
+  #previewBadge{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:7px 16px;border-radius:20px;font-size:12px;font-weight:500;display:none;z-index:120;box-shadow:0 4px 14px rgba(0,0,0,.25);letter-spacing:.02em;white-space:nowrap;}
+  #previewBadge.show{display:block;}
+
   header#topbar{display:flex;align-items:center;gap:14px;background:var(--surface);border-bottom:1px solid var(--border);padding:10px 18px;flex-shrink:0;z-index:60;flex-wrap:wrap;}
   .brand{display:flex;align-items:center;gap:8px;font-weight:500;}
   .brand .logo-dot{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--blue),#4FA8FF);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;}
@@ -36,7 +39,7 @@
   .grid-controls{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:5px 8px;}
   .grid-controls label{font-size:11px;color:var(--text-2);font-weight:500;}
   .grid-controls input[type=number]{width:44px;background:#fff;border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:11.5px;padding:4px 5px;}
-  .toggle-chip{font-size:11.5px;font-weight:500;border:1px solid var(--border);background:#fff;color:var(--text-2);padding:5px 9px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:5px;}
+  .toggle-chip{font-size:11.5px;font-weight:500;border:1px solid var(--border);background:#fff;color:var(--text-2);padding:5px 9px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;}
   .toggle-chip.active{background:var(--green-tint);border-color:var(--green);color:var(--green);}
 
   .top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
@@ -48,18 +51,28 @@
   .btn.ghost-danger{color:var(--red);}
   .btn.ghost-danger:hover{background:var(--red-tint);border-color:var(--red);}
 
+  .menu-wrap{position:relative;}
+  .dropdown-menu{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:190px;padding:6px;display:none;z-index:80;}
+  .dropdown-menu.open{display:block;}
+  .dropdown-item{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:none;padding:8px 10px;border-radius:6px;font-size:12.5px;cursor:pointer;color:var(--text);}
+  .dropdown-item:hover{background:#F1F3F4;}
+  .dropdown-item.danger{color:var(--red);}
+  .dropdown-item.danger:hover{background:var(--red-tint);}
+  .dropdown-divider{height:1px;background:var(--border);margin:6px 4px;}
+
   #pagebar{display:flex;align-items:center;gap:10px;background:#FAFBFC;border-bottom:1px solid var(--border);padding:8px 18px;flex-shrink:0;flex-wrap:wrap;}
   #pageTabs{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:160px;}
-  .page-tab{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--border);color:var(--text-2);padding:6px 10px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+  .page-tab{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--border);color:var(--text-2);padding:6px 8px 6px 10px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;flex-shrink:0;}
   .page-tab.active{background:var(--blue-tint);border-color:var(--blue);color:var(--blue-dark);}
+  .page-tab.hidden-nav{opacity:.55;}
   .page-tab .home-ic{font-size:11px;opacity:.8;}
   .page-tab .pname[contenteditable=true]{outline:none;cursor:text;}
+  .page-tab .nav-eye{opacity:.6;font-size:11px;padding:1px 3px;border-radius:3px;}
+  .page-tab .nav-eye:hover{opacity:1;background:rgba(0,0,0,0.06);}
   .page-tab .del-x{opacity:.45;font-size:12px;padding:0 2px;border-radius:3px;}
   .page-tab .del-x:hover{opacity:1;color:var(--red);}
   .page-height{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-2);flex-shrink:0;}
   .page-height input{width:60px;background:#fff;border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:11.5px;padding:5px 6px;}
-  .site-settings{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-  .site-settings input[type=text]{width:130px;background:#fff;border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 8px;}
 
   #body-row{display:flex;flex:1;min-height:0;}
 
@@ -80,7 +93,7 @@
   .canvas-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--text-3);font-size:12.5px;text-align:center;pointer-events:none;}
   .canvas-empty b{color:var(--text);font-size:15px;font-weight:500;}
 
-  .el{position:absolute;outline:1.5px dashed transparent;cursor:move;color:#1c2333;user-select:none;}
+  .el{position:absolute;outline:1.5px dashed transparent;cursor:move;color:#1c2333;user-select:none;box-sizing:border-box;}
   .el:hover{outline-color:rgba(26,115,232,0.45);}
   .el.selected{outline:1.5px solid var(--blue);}
   .el .el-inner{width:100%;height:100%;overflow:auto;}
@@ -96,12 +109,12 @@
 
   .el h2{margin:0;font-size:28px;font-weight:700;line-height:1.2;}
   .el p{margin:0;font-size:15px;line-height:1.55;}
-  .el img{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit;pointer-events:none;}
-  .el a.btn-el{display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;text-decoration:none;font-weight:600;font-size:14px;border-radius:8px;transition:transform .15s ease,box-shadow .15s ease;}
+  .el img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
+  .el a.btn-el{display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;text-decoration:none;font-weight:600;font-size:14px;transition:transform .15s ease,box-shadow .15s ease;}
   .el.preview a.btn-el{cursor:pointer;}
   .el hr{width:100%;border:none;border-top:2px solid #DADCE0;margin:0;}
-  .el .embed-wrap{width:100%;height:100%;background:repeating-linear-gradient(45deg,#F1F3F4,#F1F3F4 8px,#E8EAED 8px,#E8EAED 16px);border-radius:6px;overflow:hidden;}
-  .el .section-block{width:100%;height:100%;border-radius:6px;}
+  .el .embed-wrap{width:100%;height:100%;background:repeating-linear-gradient(45deg,#F1F3F4,#F1F3F4 8px,#E8EAED 8px,#E8EAED 16px);overflow:hidden;}
+  .el .section-block{width:100%;height:100%;}
   [contenteditable=true]:focus{outline:2px solid var(--amber);outline-offset:2px;}
 
   aside#rightpanel{width:300px;flex-shrink:0;background:var(--bg);border-left:1px solid var(--border);display:flex;flex-direction:column;padding:12px;gap:12px;overflow:hidden;}
@@ -130,6 +143,7 @@
   .field input[type=range]{width:100%;}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
   .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .corner-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
   .sec-title{font-size:10.5px;text-transform:uppercase;letter-spacing:0.06em;color:var(--blue);font-weight:600;margin:16px 0 8px;padding-top:12px;border-top:1px solid var(--border);}
   .sec-title:first-of-type{border-top:none;padding-top:0;margin-top:2px;}
   .delete-btn{width:100%;margin-top:4px;justify-content:center;}
@@ -147,6 +161,8 @@
 </style>
 </head>
 <body>
+<div id="previewBadge"></div>
+
 <div id="app">
 
   <header id="topbar">
@@ -169,12 +185,17 @@
       <button class="btn" id="codeBtn">&lt;/&gt; Code</button>
       <div class="btn-divider"></div>
       <button class="btn" id="siteSettingsBtn">⚙ Site</button>
-      <button class="btn" id="saveBtn">💾 Save</button>
-      <button class="btn" id="openBtn">📂 Open</button>
-      <input type="file" id="openFileInput" accept=".json" style="display:none;">
-      <button class="btn primary" id="downloadBtn">⇩ Download site</button>
-      <div class="btn-divider"></div>
-      <button class="btn ghost-danger" id="clearBtn">🗑 Clear page</button>
+      <div class="menu-wrap">
+        <button class="btn" id="fileMenuBtn">📁 File ▾</button>
+        <div class="dropdown-menu" id="fileMenu">
+          <button class="dropdown-item" id="saveBtn">💾 Save</button>
+          <button class="dropdown-item" id="openBtn">📂 Open</button>
+          <input type="file" id="openFileInput" accept=".json" style="display:none;">
+          <button class="dropdown-item" id="downloadBtn">⇩ Download site</button>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item danger" id="clearBtn">🗑 Clear page</button>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -206,14 +227,14 @@
           <div class="block" draggable="true" data-type="divider"><span class="ic">—</span> Divider</div>
           <div class="block" draggable="true" data-type="section"><span class="ic">▢</span> Section / box</div>
           <div class="block" draggable="true" data-type="embed"><span class="ic">&lt;/&gt;</span> Embed HTML</div>
-          <div class="hint">Buttons can link to another page — pages live inside one exported file and swap in place. Open Code up top to paste in HTML and drop it onto the page, and use Save/Open to keep working later.</div>
+          <div class="hint">Click the 👁 on a page tab to hide it from the top nav bar — the page still works and buttons can still link to it. Open Code to paste in HTML and drop it onto the page.</div>
         </div>
       </div>
 
       <div class="panel-window" id="inspector-window">
         <div class="win-titlebar"><div class="win-dots"><span></span><span></span><span></span></div><div class="win-title">Inspector</div></div>
         <div class="win-body">
-          <div id="inspEmpty" class="insp-empty">Select an element on the canvas to edit its content, style, border, animation, position, size, and links.</div>
+          <div id="inspEmpty" class="insp-empty">Select an element on the canvas to edit its content, stroke, corners, motion, position, size, and links.</div>
           <div id="inspFields" style="display:none;"></div>
         </div>
       </div>
@@ -225,7 +246,7 @@
   <div class="modal">
     <div class="modal-head"><h3>Code</h3><button class="close-x" id="closeCodeModal">✕</button></div>
     <div class="modal-body">
-      <p style="font-size:12.5px;color:var(--text-2);margin-top:0;">This is your exported site — copy or download it below. Or select all, paste in your own HTML (a snippet, or a full page), and click <b>Insert as block</b> to drop it onto the current page as a resizable element.</p>
+      <p style="font-size:12.5px;color:var(--text-2);margin-top:0;">This is your exported site — copy or download it below. Or select all, paste in your own HTML, and click <b>Insert as block</b> to drop it onto the current page as a resizable element.</p>
       <textarea id="codeOut" spellcheck="false"></textarea>
     </div>
     <div class="modal-foot">
@@ -237,12 +258,24 @@
 </div>
 
 <div class="modal-overlay" id="siteSettingsModal">
-  <div class="modal" style="width:min(420px,92vw);">
+  <div class="modal" style="width:min(460px,92vw);">
     <div class="modal-head"><h3>Site settings</h3><button class="close-x" id="closeSiteSettingsModal">✕</button></div>
     <div class="modal-body">
       <div class="field"><label>Site title</label><input type="text" id="siteTitleInput" value="My Site" placeholder="Site title"></div>
       <div class="field"><label>Navigation</label><br><button class="toggle-chip active" id="navbarToggle">▭ Top bar on</button></div>
-      <p style="font-size:12px;color:var(--text-2);margin-bottom:0;">The top bar shows your site title with a link to every page. It looks the same on each page once exported.</p>
+
+      <div class="sec-title">Top bar look</div>
+      <div class="field"><label>Logo image URL (optional)</label><input type="text" id="navLogoInput" placeholder="https://example.com/logo.png"></div>
+      <div class="row2">
+        <div class="field"><label>Nav background</label><input type="color" id="navbarBgInput" value="#1A73E8"></div>
+        <div class="field"><label>Nav text color</label><input type="color" id="navbarTextInput" value="#FFFFFF"></div>
+      </div>
+      <div class="field"><label>Nav font</label><select id="navFontInput"></select></div>
+      <div class="field">
+        <label>Background behavior</label>
+        <button class="toggle-chip" id="navTransparentToggle">◐ Transparent until scroll</button>
+      </div>
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:0;">The top bar shows your site title (and logo, if set) with a link to every page that isn't hidden (toggle the 👁 on a page tab to hide one). Turn on "transparent until scroll" to have it float invisibly over your page and fade in its background once someone scrolls down.</p>
     </div>
     <div class="modal-foot"><button class="btn primary" id="doneSiteSettingsBtn">Done</button></div>
   </div>
@@ -259,6 +292,7 @@
   const pageHeightInput = document.getElementById('pageHeightInput');
   const sitebarPreview = document.getElementById('sitebar-preview');
   const siteTitleInput = document.getElementById('siteTitleInput');
+  const previewBadge = document.getElementById('previewBadge');
 
   let elCount = 0;
   let selected = null;
@@ -270,6 +304,7 @@
 
   const FONT_OPTIONS = ['Roboto','Inter','Poppins','Montserrat','Playfair Display','Lora','Space Mono','Pacifico'];
   const ANIM_OPTIONS = {none:'None',fade:'Fade in','slide-up':'Slide up','slide-left':'Slide from left',zoom:'Zoom in',bounce:'Bounce in'};
+  const FADE_OPTIONS = {none:'None',top:'Top',bottom:'Bottom',left:'Left',right:'Right'};
   const loadedFonts = new Set(['Roboto']);
   function ensureFontLoaded(fontName){
     if(!fontName || loadedFonts.has(fontName)) return;
@@ -283,7 +318,10 @@
   // ---------- site-wide settings ----------
   let siteTitle = 'My Site';
   let navbarEnabled = true;
-  const navbarBg = '#1A73E8', navbarText = '#FFFFFF';
+  let navbarBg = '#1A73E8', navbarText = '#FFFFFF';
+  let navLogo = '';
+  let navFont = 'Roboto';
+  let navTransparentUntilScroll = false;
 
   siteTitleInput.addEventListener('input', ()=>{ siteTitle = siteTitleInput.value || 'My Site'; renderSitebarPreview(); });
   document.getElementById('navbarToggle').addEventListener('click', e=>{
@@ -292,15 +330,37 @@
     e.target.textContent = navbarEnabled ? '▭ Top bar on' : '▭ Top bar off';
     renderSitebarPreview();
   });
+  const navbarBgInput = document.getElementById('navbarBgInput');
+  const navbarTextInput = document.getElementById('navbarTextInput');
+  const navLogoInput = document.getElementById('navLogoInput');
+  const navFontInput = document.getElementById('navFontInput');
+  const navTransparentToggle = document.getElementById('navTransparentToggle');
+  navbarBgInput.addEventListener('input', ()=>{ navbarBg = navbarBgInput.value; renderSitebarPreview(); });
+  navbarTextInput.addEventListener('input', ()=>{ navbarText = navbarTextInput.value; renderSitebarPreview(); });
+  navFontInput.innerHTML = fontOptions(navFont);
+  navLogoInput.addEventListener('input', ()=>{ navLogo = navLogoInput.value.trim(); renderSitebarPreview(); });
+  navFontInput.addEventListener('change', ()=>{ navFont = navFontInput.value; ensureFontLoaded(navFont); renderSitebarPreview(); });
+  navTransparentToggle.addEventListener('click', e=>{
+    navTransparentUntilScroll = !navTransparentUntilScroll;
+    e.target.classList.toggle('active', navTransparentUntilScroll);
+    renderSitebarPreview();
+  });
 
   function renderSitebarPreview(){
     if(!navbarEnabled){ sitebarPreview.style.display='none'; return; }
     sitebarPreview.style.display='flex';
-    sitebarPreview.style.background = navbarBg;
+    sitebarPreview.style.background = navTransparentUntilScroll
+      ? `repeating-linear-gradient(45deg, ${navbarBg}, ${navbarBg} 8px, transparent 8px, transparent 16px)`
+      : navbarBg;
     sitebarPreview.style.color = navbarText;
     sitebarPreview.style.width = deviceW+'px';
-    let html = `<span class="nt">${siteTitle}</span>`;
-    pageOrder.forEach(id=> html += `<span class="np" data-pid="${id}">${pages[id].name}</span>`);
+    ensureFontLoaded(navFont);
+    sitebarPreview.style.fontFamily = `'${navFont}',sans-serif`;
+    let html = '';
+    if(navLogo) html += `<img src="${navLogo}" style="height:22px;width:22px;object-fit:cover;border-radius:5px;flex-shrink:0;">`;
+    html += `<span class="nt">${siteTitle}</span>`;
+    pageOrder.filter(id=> !pages[id].hidden).forEach(id=> html += `<span class="np" data-pid="${id}">${pages[id].name}</span>`);
+    if(navTransparentUntilScroll) html += `<span style="font-size:10px;opacity:.9;border:1px dashed rgba(255,255,255,.65);padding:2px 7px;border-radius:10px;flex-shrink:0;">fades in on scroll</span>`;
     sitebarPreview.innerHTML = html;
     sitebarPreview.querySelectorAll('.np').forEach(p=> p.addEventListener('click', ()=>{ if(p.dataset.pid!==currentPageId) loadPage(p.dataset.pid); }));
   }
@@ -327,7 +387,7 @@
   }
   function newPage(name, height){
     const id = uid('pg');
-    pages[id] = {name: name||'Untitled page', elements: [], height: height||deviceH, heightCustom:false};
+    pages[id] = {name: name||'Untitled page', elements: [], height: height||deviceH, heightCustom:false, hidden:false};
     pageOrder.push(id);
     return id;
   }
@@ -337,8 +397,8 @@
     pageOrder.forEach((id,i)=>{
       const p = pages[id];
       const tab = document.createElement('div');
-      tab.className = 'page-tab'+(id===currentPageId?' active':'');
-      tab.innerHTML = `${i===0?'<span class="home-ic">⌂</span>':''}<span class="pname">${p.name}</span>${pageOrder.length>1?'<span class="del-x">✕</span>':''}`;
+      tab.className = 'page-tab'+(id===currentPageId?' active':'')+(p.hidden?' hidden-nav':'');
+      tab.innerHTML = `${i===0?'<span class="home-ic">⌂</span>':''}<span class="pname">${p.name}</span><span class="nav-eye" title="${p.hidden?'Hidden from top nav — click to show':'Shown in top nav — click to hide'}">${p.hidden?'🙈':'👁'}</span>${pageOrder.length>1?'<span class="del-x">✕</span>':''}`;
       tab.querySelector('.pname').addEventListener('click', e=>{ e.stopPropagation(); if(id!==currentPageId) loadPage(id); });
       tab.querySelector('.pname').addEventListener('dblclick', e=>{
         e.stopPropagation();
@@ -348,6 +408,11 @@
         const done = ()=>{ span.contentEditable=false; p.name = span.textContent.trim()||'Untitled page'; span.textContent=p.name; renderSitebarPreview(); };
         span.addEventListener('blur', done, {once:true});
         span.addEventListener('keydown', ev=>{ if(ev.key==='Enter'){ ev.preventDefault(); span.blur(); } });
+      });
+      tab.querySelector('.nav-eye').addEventListener('click', e=>{
+        e.stopPropagation();
+        p.hidden = !p.hidden;
+        renderPageTabs();
       });
       const delX = tab.querySelector('.del-x');
       if(delX) delX.addEventListener('click', e=>{
@@ -393,6 +458,7 @@
     updateEmpty();
     renderPageTabs();
     pageHeightInput.value = parseInt(p.height,10);
+    if(previewing) updatePreviewBadge();
   }
 
   function applyDeviceHeight(){
@@ -420,6 +486,7 @@
       applyDeviceHeight();
       canvasLabel.textContent = `${DEVICE_LABEL[deviceW]} · ${deviceW}×${pages[currentPageId].height}`;
       renderSitebarPreview();
+      if(previewing) updatePreviewBadge();
     });
   });
 
@@ -429,15 +496,15 @@
   }
 
   // ---------- element defaults ----------
-  function baseAppearance(){ return {border:0,bordercolor:'#DADCE0',borderstyle:'solid',anim:'none',transdur:'0.6'}; }
+  function baseAppearance(){ return {border:0,bordercolor:'#DADCE0',borderstyle:'solid',anim:'none',transdur:'0.6',radius:0,rtl:'1',rtr:'1',rbl:'1',rbr:'1'}; }
   function defaultsFor(type){
     const app = baseAppearance();
     switch(type){
       case 'heading': return {...app,w:60,h:9,html:'Your headline here',bg:'transparent',color:'#202124',fs:32,align:'left',font:'Roboto'};
       case 'text': return {...app,w:44,h:16,html:'Write something about your site, your work, or your idea. Click to edit this text right on the page.',bg:'transparent',color:'#3C4043',fs:15,align:'left',font:'Roboto'};
-      case 'image': return {...app,w:34,h:26,src:'https://placehold.co/600x400/1A73E8/FFFFFF?text=Image',radius:8};
-      case 'button': return {...app,w:16,h:6,html:'Click me',bg:'#1A73E8',color:'#ffffff',fs:14,radius:8,font:'Roboto',linktype:'url',href:'https://example.com',linkpage:''};
-      case 'divider': return {...app,w:80,h:1.5};
+      case 'image': return {...app,w:34,h:26,src:'https://placehold.co/600x400/1A73E8/FFFFFF?text=Image',radius:8,fadedir:'none',fadeamt:40};
+      case 'button': return {...app,w:16,h:6,html:'Click me',bg:'#1A73E8',color:'#ffffff',fs:14,radius:8,font:'Roboto',strokeon:'box',linktype:'url',href:'https://example.com',linkpage:''};
+      case 'divider': return {...app,w:80,h:1.5,color:'#DADCE0'};
       case 'section': return {...app,w:50,h:22,bg:'#E8F0FE',radius:10};
       case 'embed': return {...app,w:40,h:26,htmlraw:'<!-- Paste an <iframe> or custom HTML here -->\n<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:sans-serif;color:#667;">Embed area</div>'};
     }
@@ -474,12 +541,47 @@
     return el;
   }
 
-  function applyWrapperAppearance(el){
-    const d = el.dataset;
+  // ---------- shared style helpers (used live AND at export) ----------
+  function radiusCSS(d){
+    const r = parseFloat(d.radius)||0;
+    const tl = (d.rtl!=='0') ? r : 0;
+    const tr = (d.rtr!=='0') ? r : 0;
+    const br = (d.rbr!=='0') ? r : 0;
+    const bl = (d.rbl!=='0') ? r : 0;
+    return `${tl}px ${tr}px ${br}px ${bl}px`;
+  }
+  function textStrokeCSS(d){
     const bw = parseFloat(d.border)||0;
-    el.style.borderWidth = bw+'px';
-    el.style.borderStyle = d.borderstyle||'solid';
-    el.style.borderColor = d.bordercolor||'#DADCE0';
+    if(bw<=0) return '';
+    return `-webkit-text-stroke:${bw}px ${d.bordercolor||'#DADCE0'};paint-order:stroke fill;`;
+  }
+  function usesBoxStroke(type, d){
+    if(['image','section','divider','embed'].includes(type)) return true;
+    if(type==='button') return (!d.strokeon || d.strokeon==='box' || d.strokeon==='both');
+    return false;
+  }
+  function fadeCSS(d){
+    if(!d.fadedir || d.fadedir==='none') return '';
+    const amt = Math.max(0, Math.min(100, parseFloat(d.fadeamt)||40));
+    const stop = 100-amt;
+    const dirMap = {top:'to top',bottom:'to bottom',left:'to left',right:'to right'};
+    const dir = dirMap[d.fadedir] || 'to right';
+    const grad = `linear-gradient(${dir}, black ${stop}%, transparent 100%)`;
+    return `-webkit-mask-image:${grad};mask-image:${grad};`;
+  }
+
+  function applyWrapperAppearance(el){
+    const d = el.dataset, type = d.type;
+    const bw = parseFloat(d.border)||0;
+    if(usesBoxStroke(type,d) && bw>0){
+      el.style.borderWidth = bw+'px';
+      el.style.borderStyle = d.borderstyle||'solid';
+      el.style.borderColor = d.bordercolor||'#DADCE0';
+    } else {
+      el.style.borderWidth = '0';
+      el.style.borderStyle = 'none';
+    }
+    el.style.borderRadius = radiusCSS(d);
   }
 
   function renderInner(el){
@@ -489,19 +591,20 @@
     if(['heading','text','button'].includes(type)) ensureFontLoaded(font);
 
     if(type==='heading'){
-      inner.innerHTML = `<h2 contenteditable="${editable}" style="color:${d.color};font-size:${d.fs}px;text-align:${d.align};font-family:'${font}',sans-serif;">${d.html}</h2>`;
+      inner.innerHTML = `<h2 contenteditable="${editable}" style="color:${d.color};font-size:${d.fs}px;text-align:${d.align};font-family:'${font}',sans-serif;${textStrokeCSS(d)}">${d.html}</h2>`;
     } else if(type==='text'){
-      inner.innerHTML = `<p contenteditable="${editable}" style="color:${d.color};font-size:${d.fs}px;text-align:${d.align};font-family:'${font}',sans-serif;">${d.html}</p>`;
+      inner.innerHTML = `<p contenteditable="${editable}" style="color:${d.color};font-size:${d.fs}px;text-align:${d.align};font-family:'${font}',sans-serif;${textStrokeCSS(d)}">${d.html}</p>`;
     } else if(type==='image'){
-      inner.innerHTML = `<img src="${d.src}" style="border-radius:${d.radius}px;" draggable="false">`;
+      inner.innerHTML = `<img src="${d.src}" style="border-radius:${radiusCSS(d)};${fadeCSS(d)}" draggable="false">`;
     } else if(type==='button'){
-      inner.innerHTML = `<a href="javascript:void(0)" class="btn-el" contenteditable="${editable}" style="background:${d.bg};color:${d.color};font-size:${d.fs}px;border-radius:${d.radius}px;font-family:'${font}',sans-serif;">${d.html}</a>`;
+      const strokeText = (d.strokeon==='text'||d.strokeon==='both') ? textStrokeCSS(d) : '';
+      inner.innerHTML = `<a href="javascript:void(0)" class="btn-el" contenteditable="${editable}" style="background:${d.bg};color:${d.color};font-size:${d.fs}px;border-radius:${radiusCSS(d)};font-family:'${font}',sans-serif;${strokeText}">${d.html}</a>`;
     } else if(type==='divider'){
-      inner.innerHTML = `<hr>`;
+      inner.innerHTML = `<hr style="border-top-color:${d.color||'#DADCE0'};">`;
     } else if(type==='section'){
-      inner.innerHTML = `<div class="section-block" style="background:${d.bg};border-radius:${d.radius}px;"></div>`;
+      inner.innerHTML = `<div class="section-block" style="background:${d.bg};border-radius:${radiusCSS(d)};"></div>`;
     } else if(type==='embed'){
-      inner.innerHTML = `<div class="embed-wrap">${d.htmlraw}</div>`;
+      inner.innerHTML = `<div class="embed-wrap" style="border-radius:${radiusCSS(d)};">${d.htmlraw}</div>`;
     }
     applyWrapperAppearance(el);
   }
@@ -650,9 +753,19 @@
   // ---------- inspector ----------
   function field(label, html){ return `<div class="field"><label>${label}</label>${html}</div>`; }
   function toHex(c){ return (!c || c==='transparent') ? '#ffffff' : c; }
-  function pageOptions(selectedId){ return pageOrder.map(id=> `<option value="${id}" ${id===selectedId?'selected':''}>${pages[id].name}</option>`).join(''); }
+  function pageOptions(selectedId){ return pageOrder.map(id=> `<option value="${id}" ${id===selectedId?'selected':''}>${pages[id].name}${pages[id].hidden?' (hidden from nav)':''}</option>`).join(''); }
   function fontOptions(sel){ return FONT_OPTIONS.map(f=>`<option value="${f}" ${f===sel?'selected':''}>${f}</option>`).join(''); }
   function animOptions(sel){ return Object.keys(ANIM_OPTIONS).map(k=>`<option value="${k}" ${k===sel?'selected':''}>${ANIM_OPTIONS[k]}</option>`).join(''); }
+  function fadeOptions(sel){ return Object.keys(FADE_OPTIONS).map(k=>`<option value="${k}" ${k===sel?'selected':''}>${FADE_OPTIONS[k]}</option>`).join(''); }
+
+  function cornerGrid(d){
+    return `<div class="corner-grid">
+        <button type="button" class="toggle-chip ${d.rtl!=='0'?'active':''}" id="f_rtl">↖ Top-left</button>
+        <button type="button" class="toggle-chip ${d.rtr!=='0'?'active':''}" id="f_rtr">↗ Top-right</button>
+        <button type="button" class="toggle-chip ${d.rbl!=='0'?'active':''}" id="f_rbl">↙ Bottom-left</button>
+        <button type="button" class="toggle-chip ${d.rbr!=='0'?'active':''}" id="f_rbr">↘ Bottom-right</button>
+      </div>`;
+  }
 
   function buildInspector(el){
     inspEmpty.style.display='none'; inspFields.style.display='block';
@@ -666,7 +779,9 @@
       html += field('Align', `<select id="f_align"><option value="left" ${d.align==='left'?'selected':''}>Left</option><option value="center" ${d.align==='center'?'selected':''}>Center</option><option value="right" ${d.align==='right'?'selected':''}>Right</option></select>`);
     } else if(type==='image'){
       html += field('Image URL', `<input type="text" id="f_src" value="${d.src}">`);
-      html += field('Corner radius (px)', `<input type="text" id="f_radius" value="${d.radius}">`);
+      html += `<div class="sec-title">Fade</div>`;
+      html += field('Fade direction', `<select id="f_fadedir">${fadeOptions(d.fadedir)}</select>`);
+      html += field(`Fade amount — ${d.fadeamt||40}%`, `<input type="range" id="f_fadeamt" min="0" max="100" step="5" value="${d.fadeamt||40}">`);
     } else if(type==='button'){
       html += field('Label', `<input type="text" id="f_html" value="${d.html}">`);
       html += field('Font', `<select id="f_font">${fontOptions(d.font)}</select>`);
@@ -676,25 +791,36 @@
       else { html += field('URL', `<input type="text" id="f_href" value="${d.href||''}">`); }
       html += `<div class="sec-title">Style</div>`;
       html += `<div class="row2">${field('Background',`<input type="color" id="f_bg" value="${toHex(d.bg)}">`)}${field('Text color',`<input type="color" id="f_color" value="${toHex(d.color)}">`)}</div>`;
-      html += field('Corner radius (px)', `<input type="text" id="f_radius" value="${d.radius}">`);
     } else if(type==='section'){
       html += field('Background', `<input type="color" id="f_bg" value="${toHex(d.bg)}">`);
-      html += field('Corner radius (px)', `<input type="text" id="f_radius" value="${d.radius}">`);
     } else if(type==='embed'){
       html += field('HTML / iframe embed code', `<textarea id="f_htmlraw" style="min-height:130px;">${d.htmlraw}</textarea>`);
     } else if(type==='divider'){
-      html += `<div class="insp-empty">Drag the edges on canvas to change the divider's width.</div>`;
+      html += field('Color', `<input type="color" id="f_color" value="${toHex(d.color)}">`);
     }
 
-    html += `<div class="sec-title">Border &amp; motion</div>
-      <div class="row3">
-        ${field('Stroke (px)',`<input type="text" id="f_border" value="${d.border}">`)}
-        ${field('Color',`<input type="color" id="f_bordercolor" value="${toHex(d.bordercolor)}">`)}
-        ${field('Style',`<select id="f_borderstyle"><option value="solid" ${d.borderstyle==='solid'?'selected':''}>Solid</option><option value="dashed" ${d.borderstyle==='dashed'?'selected':''}>Dashed</option><option value="dotted" ${d.borderstyle==='dotted'?'selected':''}>Dotted</option></select>`)}
-      </div>
+    if(type==='heading' || type==='text'){
+      html += `<div class="sec-title">Text stroke</div>`;
+      html += `<div class="row2">${field('Width (px)',`<input type="text" id="f_border" value="${d.border}">`)}${field('Color',`<input type="color" id="f_bordercolor" value="${toHex(d.bordercolor)}">`)}</div>`;
+    } else if(type==='button'){
+      html += `<div class="sec-title">Stroke</div>`;
+      html += `<div class="row3">${field('Width (px)',`<input type="text" id="f_border" value="${d.border}">`)}${field('Color',`<input type="color" id="f_bordercolor" value="${toHex(d.bordercolor)}">`)}${field('Style',`<select id="f_borderstyle"><option value="solid" ${d.borderstyle==='solid'?'selected':''}>Solid</option><option value="dashed" ${d.borderstyle==='dashed'?'selected':''}>Dashed</option><option value="dotted" ${d.borderstyle==='dotted'?'selected':''}>Dotted</option></select>`)}</div>`;
+      html += field('Applies to', `<select id="f_strokeon"><option value="box" ${d.strokeon==='box'?'selected':''}>Button box</option><option value="text" ${d.strokeon==='text'?'selected':''}>Label text</option><option value="both" ${d.strokeon==='both'?'selected':''}>Both</option></select>`);
+    } else if(type==='image' || type==='section' || type==='embed'){
+      html += `<div class="sec-title">Border</div>`;
+      html += `<div class="row3">${field('Width (px)',`<input type="text" id="f_border" value="${d.border}">`)}${field('Color',`<input type="color" id="f_bordercolor" value="${toHex(d.bordercolor)}">`)}${field('Style',`<select id="f_borderstyle"><option value="solid" ${d.borderstyle==='solid'?'selected':''}>Solid</option><option value="dashed" ${d.borderstyle==='dashed'?'selected':''}>Dashed</option><option value="dotted" ${d.borderstyle==='dotted'?'selected':''}>Dotted</option></select>`)}</div>`;
+    }
+
+    if(['image','section','embed','button'].includes(type)){
+      html += `<div class="sec-title">Corners</div>`;
+      html += field('Radius (px)', `<input type="text" id="f_radius" value="${d.radius}">`);
+      html += cornerGrid(d);
+      html += `<div class="insp-empty" style="margin-top:-6px;">Turn a corner off to keep it sharp, unaffected by the radius above.</div>`;
+    }
+
+    html += `<div class="sec-title">Motion</div>
       ${field('Entrance animation', `<select id="f_anim">${animOptions(d.anim)}</select>`)}
-      ${field(`Animation speed — ${d.transdur}s`, `<input type="range" id="f_transdur" min="0.2" max="2" step="0.1" value="${d.transdur}">`)}
-    `;
+      ${field(`Animation speed — ${d.transdur}s`, `<input type="range" id="f_transdur" min="0.2" max="2" step="0.1" value="${d.transdur}">`)}`;
 
     html += `<div class="sec-title">Position &amp; size (%)</div>
       <div class="row2">${field('X',`<input type="text" id="f_x" value="${parseFloat(el.style.left).toFixed(1)}">`)}${field('Y',`<input type="text" id="f_y" value="${parseFloat(el.style.top).toFixed(1)}">`)}</div>
@@ -718,10 +844,26 @@
     if(fontSel) fontSel.addEventListener('change', ()=>{ d.font=fontSel.value; renderInner(el); });
     const borderStyleSel = document.getElementById('f_borderstyle');
     if(borderStyleSel) borderStyleSel.addEventListener('change', ()=>{ d.borderstyle=borderStyleSel.value; renderInner(el); });
+    const strokeOnSel = document.getElementById('f_strokeon');
+    if(strokeOnSel) strokeOnSel.addEventListener('change', ()=>{ d.strokeon=strokeOnSel.value; renderInner(el); });
+    const fadeDirSel = document.getElementById('f_fadedir');
+    if(fadeDirSel) fadeDirSel.addEventListener('change', ()=>{ d.fadedir=fadeDirSel.value; renderInner(el); });
+    const fadeAmtR = document.getElementById('f_fadeamt');
+    if(fadeAmtR) fadeAmtR.addEventListener('input', ()=>{ d.fadeamt=fadeAmtR.value; renderInner(el); buildInspector(el); });
     const animSel = document.getElementById('f_anim');
     if(animSel) animSel.addEventListener('change', ()=>{ d.anim=animSel.value; });
     const transdurR = document.getElementById('f_transdur');
     if(transdurR) transdurR.addEventListener('input', ()=>{ d.transdur=transdurR.value; buildInspector(el); });
+
+    ['rtl','rtr','rbl','rbr'].forEach(c=>{
+      const btn = document.getElementById('f_'+c);
+      if(!btn) return;
+      btn.addEventListener('click', ()=>{
+        d[c] = (d[c]==='0') ? '1' : '0';
+        btn.classList.toggle('active', d[c]!=='0');
+        renderInner(el);
+      });
+    });
 
     const linkPageSel = document.getElementById('f_linkpage');
     if(linkPageSel) linkPageSel.addEventListener('change', ()=>{ d.linkpage=linkPageSel.value; });
@@ -743,12 +885,18 @@
   }
 
   // ---------- preview ----------
+  function updatePreviewBadge(){
+    if(!previewing || !pages[currentPageId]) return;
+    previewBadge.textContent = `Previewing — ${DEVICE_LABEL[deviceW]} · ${deviceW}×${pages[currentPageId].height} · ${pages[currentPageId].name}`;
+  }
   const previewBtn = document.getElementById('previewBtn');
   previewBtn.addEventListener('click', ()=>{
     previewing = !previewing;
     canvas.classList.toggle('preview-mode', previewing);
     previewBtn.textContent = previewing ? '✎ Edit' : '👁 Preview';
-    if(previewing) deselect();
+    canvasLabel.style.display = previewing ? 'none' : 'block';
+    if(previewing){ deselect(); previewBadge.classList.add('show'); updatePreviewBadge(); }
+    else { previewBadge.classList.remove('show'); }
     document.getElementById('rightpanel').style.visibility = previewing?'hidden':'visible';
     canvas.querySelectorAll('.el').forEach(renderInner);
   });
@@ -759,9 +907,21 @@
     deselect(); updateEmpty();
   });
 
+  // ---------- File menu ----------
+  const fileMenuBtn = document.getElementById('fileMenuBtn');
+  const fileMenu = document.getElementById('fileMenu');
+  fileMenuBtn.addEventListener('click', e=>{ e.stopPropagation(); fileMenu.classList.toggle('open'); });
+  document.addEventListener('click', e=>{ if(!e.target.closest('.menu-wrap')) fileMenu.classList.remove('open'); });
+  fileMenu.querySelectorAll('.dropdown-item').forEach(btn=> btn.addEventListener('click', ()=> fileMenu.classList.remove('open')));
+
   // ---------- site settings modal ----------
   const siteSettingsModal = document.getElementById('siteSettingsModal');
-  document.getElementById('siteSettingsBtn').addEventListener('click', ()=> siteSettingsModal.classList.add('open'));
+  document.getElementById('siteSettingsBtn').addEventListener('click', ()=>{
+    navbarBgInput.value = navbarBg; navbarTextInput.value = navbarText;
+    navLogoInput.value = navLogo; navFontInput.value = navFont;
+    navTransparentToggle.classList.toggle('active', navTransparentUntilScroll);
+    siteSettingsModal.classList.add('open');
+  });
   document.getElementById('closeSiteSettingsModal').addEventListener('click', ()=> siteSettingsModal.classList.remove('open'));
   document.getElementById('doneSiteSettingsBtn').addEventListener('click', ()=> siteSettingsModal.classList.remove('open'));
   siteSettingsModal.addEventListener('click', e=>{ if(e.target===siteSettingsModal) siteSettingsModal.classList.remove('open'); });
@@ -771,23 +931,24 @@
     let body = '';
     elements.forEach(data=>{
       const type = data.type, d = data.dataset;
-      let style = `position:absolute;left:${data.left};top:${data.top};width:${data.width};height:${data.height};`;
+      let style = `position:absolute;left:${data.left};top:${data.top};width:${data.width};height:${data.height};border-radius:${radiusCSS(d)};`;
       const bw = parseFloat(d.border)||0;
-      if(bw>0) style += `border:${bw}px ${d.borderstyle||'solid'} ${d.bordercolor||'#DADCE0'};`;
+      if(usesBoxStroke(type,d) && bw>0) style += `border:${bw}px ${d.borderstyle||'solid'} ${d.bordercolor||'#DADCE0'};`;
       if(d.anim && d.anim!=='none') style += `animation:iv-${d.anim} ${d.transdur||'0.6'}s ease both;`;
       let inner = '';
       const font = d.font||'Roboto';
-      if(type==='heading') inner = `<h2 style="margin:0;color:${d.color};font-size:${d.fs}px;text-align:${d.align};font-family:'${font}',sans-serif;">${d.html}</h2>`;
-      else if(type==='text') inner = `<p style="margin:0;color:${d.color};font-size:${d.fs}px;text-align:${d.align};font-family:'${font}',sans-serif;line-height:1.55;">${d.html}</p>`;
-      else if(type==='image') inner = `<img src="${d.src}" style="width:100%;height:100%;object-fit:cover;border-radius:${d.radius}px;display:block;">`;
+      if(type==='heading') inner = `<h2 style="margin:0;color:${d.color};font-size:${d.fs}px;text-align:${d.align};font-family:'${font}',sans-serif;${textStrokeCSS(d)}">${d.html}</h2>`;
+      else if(type==='text') inner = `<p style="margin:0;color:${d.color};font-size:${d.fs}px;text-align:${d.align};font-family:'${font}',sans-serif;line-height:1.55;${textStrokeCSS(d)}">${d.html}</p>`;
+      else if(type==='image') inner = `<img src="${d.src}" style="width:100%;height:100%;object-fit:cover;border-radius:${radiusCSS(d)};display:block;${fadeCSS(d)}">`;
       else if(type==='button'){
         let href='#', clickAttr='';
         if(d.linktype==='page' && d.linkpage && slugMap[d.linkpage]){ clickAttr = ` onclick="invisiGoTo('${slugMap[d.linkpage]}');return false;"`; }
         else if(d.href) href = d.href;
-        inner = `<a href="${href}"${clickAttr} class="btn-el" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;text-decoration:none;font-weight:600;font-family:'${font}',sans-serif;background:${d.bg};color:${d.color};font-size:${d.fs}px;border-radius:${d.radius}px;">${d.html}</a>`;
+        const strokeText = (d.strokeon==='text'||d.strokeon==='both') ? textStrokeCSS(d) : '';
+        inner = `<a href="${href}"${clickAttr} class="btn-el" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;text-decoration:none;font-weight:600;font-family:'${font}',sans-serif;background:${d.bg};color:${d.color};font-size:${d.fs}px;border-radius:${radiusCSS(d)};${strokeText}">${d.html}</a>`;
       }
-      else if(type==='divider') inner = `<hr style="width:100%;border:none;border-top:2px solid #DADCE0;margin:0;">`;
-      else if(type==='section') inner = `<div style="width:100%;height:100%;background:${d.bg};border-radius:${d.radius}px;"></div>`;
+      else if(type==='divider') inner = `<hr style="width:100%;border:none;border-top:2px solid ${d.color||'#DADCE0'};margin:0;">`;
+      else if(type==='section') inner = `<div style="width:100%;height:100%;background:${d.bg};border-radius:${radiusCSS(d)};"></div>`;
       else if(type==='embed') inner = d.htmlraw;
       body += `      <div style="${style}">\n        ${inner}\n      </div>\n`;
     });
@@ -804,7 +965,7 @@
     const navHtml = navbarEnabled ? `
   <header class="site-navbar">
     <div class="nav-title">${siteTitle}</div>
-    <nav>${pageOrder.map(id=>`<a href="#" onclick="invisiGoTo('${slugMap[id]}');return false;">${pages[id].name}</a>`).join('')}</nav>
+    <nav>${pageOrder.filter(id=>!pages[id].hidden).map(id=>`<a href="#" onclick="invisiGoTo('${slugMap[id]}');return false;">${pages[id].name}</a>`).join('')}</nav>
   </header>` : '';
 
     const pagesHtml = pageOrder.map((id,i)=>{
@@ -890,7 +1051,7 @@ function invisiGoTo(slug){
   // ---------- save / open project ----------
   function projectData(){
     serializeCurrentPage();
-    return {version:1, siteTitle, navbarEnabled, pages, pageOrder, currentPageId};
+    return {version:2, siteTitle, navbarEnabled, navbarBg, navbarText, pages, pageOrder, currentPageId};
   }
   document.getElementById('saveBtn').addEventListener('click', ()=>{
     const blob = new Blob([JSON.stringify(projectData(),null,2)], {type:'application/json'});
@@ -907,8 +1068,10 @@ function invisiGoTo(slug){
         const data = JSON.parse(reader.result);
         if(!data.pages || !data.pageOrder) throw new Error('bad file');
         pages = data.pages; pageOrder = data.pageOrder;
+        pageOrder.forEach(id=>{ if(pages[id].hidden===undefined) pages[id].hidden=false; });
         siteTitle = data.siteTitle || 'My Site'; siteTitleInput.value = siteTitle;
         navbarEnabled = data.navbarEnabled !== false;
+        navbarBg = data.navbarBg || '#1A73E8'; navbarText = data.navbarText || '#FFFFFF';
         const chip = document.getElementById('navbarToggle');
         chip.classList.toggle('active', navbarEnabled);
         chip.textContent = navbarEnabled ? '▭ Top bar on' : '▭ Top bar off';
